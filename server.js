@@ -13,9 +13,11 @@ const MAX_RUNS = 30;
 
 function loadDB() {
   try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    if (!db.originTags) db.originTags = {};
+    return db;
   } catch (e) {
-    return { runs: {} };
+    return { runs: {}, originTags: {} };
   }
 }
 
@@ -79,6 +81,24 @@ app.post('/api/runs', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Origin tags: category label -> 'product' | 'parser' | 'user'.
+// This persists across every future upload — tag a category once, it stays tagged.
+app.get('/api/origin-tags', (req, res) => {
+  const db = loadDB();
+  res.json(db.originTags || {});
+});
+
+app.post('/api/origin-tags', (req, res) => {
+  const { category, origin } = req.body || {};
+  if (!category || !['product', 'parser', 'user'].includes(origin)) {
+    return res.status(400).json({ error: 'expected { category, origin: product|parser|user }' });
+  }
+  const db = loadDB();
+  db.originTags[category] = origin;
+  saveDB(db);
+  res.json({ ok: true, originTags: db.originTags });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Errata Report listening on port ' + PORT));
