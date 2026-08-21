@@ -50,6 +50,18 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .northstar-sub b{font-family:var(--font-mono);color:var(--ink);}
 .northstar-sub .tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
 
+.origin-breakdown{margin-top:16px;border-top:1px solid var(--rule);padding-top:14px;}
+.origin-line{margin-bottom:10px;}
+.origin-line:last-child{margin-bottom:0;}
+.origin-line-head{font-size:13.5px;}
+.origin-line-head b{font-family:var(--font-mono);font-weight:600;}
+.origin-line-pct{color:var(--muted);font-size:12.5px;}
+.origin-line-names{font-size:12px;color:var(--muted);margin:2px 0 0 14px;}
+.tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+
+.btn-secondary{margin-top:16px;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.03em;background:var(--paper);color:var(--ink);border:1px solid var(--rule-strong);padding:8px 14px;cursor:pointer;border-radius:1px;}
+.btn-secondary:hover{border-color:var(--ink);}
+
 .section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--rust);margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
 h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;margin:0 0 4px;}
 .section-dek{color:var(--muted);font-size:13.5px;margin:0 0 16px;max-width:620px;}
@@ -320,20 +332,58 @@ document.getElementById('runSelect').addEventListener('change', async function(e
 });
 
 function computeNorthStar(summary){
-  let mustBeZeroCount=0, userCount=0;
+  const breakdown = { product: {count:0, categories:[]}, parser: {count:0, categories:[]}, user: {count:0, categories:[]} };
   summary.buckets.forEach(function(b){
     const origin=effectiveOrigin(b);
-    if(ORIGIN_META[origin].mustBeZero) mustBeZeroCount+=b.count; else userCount+=b.count;
+    breakdown[origin].count += b.count;
+    breakdown[origin].categories.push({ category:b.category, count:b.count, articleCount:b.articleCount, journalCount:b.journalCount });
   });
+  Object.keys(breakdown).forEach(function(k){ breakdown[k].categories.sort(function(a,b){return b.count-a.count;}); });
+  const mustBeZeroCount = breakdown.product.count + breakdown.parser.count;
+  const userCount = breakdown.user.count;
   const total=mustBeZeroCount+userCount;
   const share = total ? mustBeZeroCount/total : 0;
-  return { mustBeZeroCount, userCount, total, share };
+  return { mustBeZeroCount, userCount, total, share, breakdown };
 }
+
+function buildStakeholderSummary(summary){
+  const ns=computeNorthStar(summary);
+  const lines=[];
+  lines.push('Error Elimination Summary — '+esc_plain(summary.meta.filename)+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
+  lines.push('');
+  lines.push('Total error instances: '+fmtInt(summary.totals.totalInstances)+' across '+fmtInt(summary.totals.uniqueArticles)+' articles, '+fmtInt(summary.totals.uniqueJournals)+' journals.');
+  lines.push('Product-preventable error rate: '+fmtPct(ns.share)+' (target: 0%).');
+  lines.push('');
+  lines.push('PRODUCT ERRORS: '+fmtInt(ns.breakdown.product.count)+' instances ('+fmtPct(summary.totals.totalInstances?ns.breakdown.product.count/summary.totals.totalInstances:0)+' of all errors)');
+  ns.breakdown.product.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances, '+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals'); });
+  lines.push('');
+  lines.push('PARSER ERRORS: '+fmtInt(ns.breakdown.parser.count)+' instances ('+fmtPct(summary.totals.totalInstances?ns.breakdown.parser.count/summary.totals.totalInstances:0)+' of all errors)');
+  ns.breakdown.parser.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances, '+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals'); });
+  lines.push('');
+  lines.push('USER-CONTENT ERRORS (not counted against product goal): '+fmtInt(ns.breakdown.user.count)+' instances');
+  ns.breakdown.user.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances'); });
+  return lines.join('\n');
+}
+function esc_plain(s){ return String(s); }
 
 function renderNorthStar(summary){
   const ns=computeNorthStar(summary);
   const el=document.getElementById('northstarSection');
   const goodClass = ns.share <= 0.02 ? 'good' : '';
+  const productShare = summary.totals.totalInstances ? ns.breakdown.product.count/summary.totals.totalInstances : 0;
+  const parserShare = summary.totals.totalInstances ? ns.breakdown.parser.count/summary.totals.totalInstances : 0;
+  const userShare = summary.totals.totalInstances ? ns.breakdown.user.count/summary.totals.totalInstances : 0;
+
+  function originLine(key, meta){
+    const b = ns.breakdown[key];
+    const names = b.categories.map(function(c){return c.category+' ('+fmtInt(c.count)+')';}).join(', ');
+    return '<div class="origin-line">'+
+      '<div class="origin-line-head"><span class="tag-dot" style="background:'+meta.dot+'"></span><b>'+meta.label+' errors: '+fmtInt(b.count)+'</b>'+
+      '<span class="origin-line-pct"> · '+fmtPct(summary.totals.totalInstances ? b.count/summary.totals.totalInstances : 0)+' of all errors</span></div>'+
+      (b.categories.length ? '<div class="origin-line-names">'+esc(names)+'</div>' : '<div class="origin-line-names">None currently tagged.</div>')+
+    '</div>';
+  }
+
   el.innerHTML=
     '<div class="northstar">'+
       '<div class="northstar-label">North Star · Product-Preventable Error Rate</div>'+
@@ -341,11 +391,24 @@ function renderNorthStar(summary){
         '<div class="northstar-num '+goodClass+'">'+fmtPct(ns.share)+'</div>'+
         '<div class="northstar-target">of all error volume is on us · target: 0%</div>'+
       '</div>'+
-      '<div class="northstar-sub">'+
-        '<span><span class="tag-dot" style="background:'+ORIGIN_META.product.dot+'"></span><b>'+fmtInt(ns.mustBeZeroCount)+'</b> product + parser errors (must be zero)</span>'+
-        '<span><span class="tag-dot" style="background:'+ORIGIN_META.user.dot+'"></span><b>'+fmtInt(ns.userCount)+'</b> user-content errors (tracked, not against us)</span>'+
+      '<div class="origin-breakdown">'+
+        originLine('product', ORIGIN_META.product)+
+        originLine('parser', ORIGIN_META.parser)+
+        originLine('user', ORIGIN_META.user)+
       '</div>'+
+      '<button class="btn-secondary" id="copySummaryBtn">Copy stakeholder summary</button>'+
     '</div>';
+
+  document.getElementById('copySummaryBtn').addEventListener('click', async function(){
+    const text = buildStakeholderSummary(summary);
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast('Summary copied — paste it into an email or Slack update.');
+    }catch(e){
+      showToast('Could not copy automatically — select the text in the console instead.');
+      console.log(text);
+    }
+  });
 }
 
 function renderPriority(summary){
