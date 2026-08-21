@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Path to Zero — Error Elimination Tracker</title>
+<title>Direction to Zero — Proof Central Output XML Validation Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
@@ -134,13 +134,13 @@ table.data th.num{text-align:right;}
 <div id="app">
   <header class="masthead">
     <div class="masthead-top">
-      <div class="kicker">Content Validation Report</div>
+      <div class="kicker">Proof Central Output XML Validation Report</div>
       <div>
         <button class="btn" id="uploadBtn">+ Upload CSV run</button>
         <input type="file" id="fileInput" accept=".csv" hidden />
       </div>
     </div>
-    <h1 class="title">Path to Zero</h1>
+    <h1 class="title">Direction to Zero</h1>
     <div class="run-select-row" id="runSelectRow" style="display:none;">
       <label style="color:var(--muted);">Viewing —</label>
       <select id="runSelect"></select>
@@ -407,7 +407,7 @@ function computeNorthStar(summary){
 function buildStakeholderSummary(summary){
   const ns=computeNorthStar(summary);
   const lines=[];
-  lines.push('Path to Zero — '+summary.meta.filename+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
+  lines.push('Proof Central — Output XML Validation Report — '+summary.meta.filename+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
   lines.push('');
   lines.push('Must eliminate: '+fmtInt(ns.mustFixCount)+' errors ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total). Target: zero.');
   lines.push('These can only come from how the document is built — not from a reader or author\'s content.');
@@ -446,7 +446,7 @@ function renderNorthStar(summary){
         '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustFixCount)+'</div>'+
         '<div class="ns-hero-side">'+
           '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' errors</div>'+
-          '<div class="ns-hero-target">target — zero</div>'+
+          '<div class="ns-hero-target">aiming for zero</div>'+
         '</div>'+
         '<canvas id="nsSparkline" class="ns-sparkline"></canvas>'+
       '</div>'+
