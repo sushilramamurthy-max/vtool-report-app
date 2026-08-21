@@ -67,6 +67,21 @@ Since there's no login, anyone with the URL can view and upload data. Two easy o
 - **Render's built-in basic auth**: available on paid plans under service settings.
 - **A shared secret header**: add a check in `server.js` that rejects requests without a specific `x-api-key` header, and have the frontend send it — ask me if you want this wired in.
 
+## Ask-anything (optional)
+
+The North Star card includes a free-form question box — for when a stakeholder asks something the report doesn't already show ("which journal improved the most last week?", "how many DOI errors are from journals outside the top 10?"). It sends the currently-loaded report data to Claude via the Anthropic API and returns a direct answer, right there, instead of you having to say "I'll get back to you."
+
+**This needs your own Anthropic API key** — the app runs standalone on Render now, not inside claude.ai, so it can't use claude.ai's built-in access. Without a key, the box still works but shows a clear "not configured" message instead of failing silently.
+
+To set it up:
+1. Get a key from [console.anthropic.com](https://console.anthropic.com) (Settings → API Keys).
+2. In Render, go to your service → **Environment** → add a variable: `ANTHROPIC_API_KEY` = your key.
+3. Redeploy. The box starts working immediately, no code changes needed.
+
+**Cost:** each question sends roughly 13,000 tokens of report data (varies with how much history you've uploaded) plus the answer. At current Claude Sonnet pricing that's a small fraction of a cent per question — this won't show up as a meaningful cost unless your team is asking hundreds of questions a day. You can swap the model by setting `ANTHROPIC_ASK_MODEL` (defaults to `claude-sonnet-5`) — e.g. to `claude-haiku-4-5-20251001` for lower cost per question.
+
+**What data leaves the server:** every question sends the full current report — category breakdowns, journal names, article IDs, daily trends, and your origin tags — to Anthropic's API. No raw manuscript content or full CSV rows are sent, only the aggregated summary already computed for the dashboard. Worth knowing if this deployment is ever shown to external customers.
+
 ## How data is stored
 
 Each upload is aggregated in the browser (nothing raw leaves the client except the computed summary — category counts, daily trends, top journals/articles). That summary — typically 50–150KB even for 50,000+ row CSVs — is POSTed to `/api/runs` and saved to `data.json` on the server. The last 30 uploads are kept; older ones are dropped automatically. Origin tags (category → Product/Parser/User) are saved separately and persist independent of any single run.

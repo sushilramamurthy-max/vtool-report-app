@@ -103,5 +103,77 @@ app.post('/api/origin-tags', (req, res) => {
   res.json({ ok: true, originTags: db.originTags });
 });
 
+// Ask-anything: answers a free-form question about the currently loaded report using
+// the Anthropic API. Requires ANTHROPIC_API_KEY to be set as an environment variable —
+// this app runs standalone (not inside claude.ai), so it needs its own key and pays for
+// its own usage. Without a key set, this returns a clear "not configured" message instead
+// of failing silently.
+const ASK_SYSTEM_PROMPT = [
+  'You are answering questions about an XML-validation error report for a scholarly-publishing',
+  'production pipeline, embedded inside an internal dashboard. You will be given a JSON snapshot',
+  'of the current report (error categories, per-category stats, journals, problem articles, daily',
+  'trend, origin tags, and upload history) and a question from a product manager or a stakeholder',
+  'they are talking to live.',
+  '',
+  'Answer using ONLY the data provided — never invent numbers, journal names, or article IDs that',
+  'are not in the data. If the data does not contain what is needed to answer, say so plainly and',
+  'name what data would be needed, rather than guessing or padding the answer.',
+  '',
+  'Be concise: a few sentences or a short list, using exact figures from the data with commas',
+  '(e.g. "12,345", not "about 12k"). This is for someone who needs a fast, precise answer in a',
+  'live conversation, not a report.'
+].join('\n');
+
+app.post('/api/ask', async (req, res) => {
+  const { question, context } = req.body || {};
+  if (!question || typeof question !== 'string' || !question.trim()) {
+    return res.status(400).json({ error: 'missing question' });
+  }
+  if (!context) {
+    return res.status(400).json({ error: 'missing context' });
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({
+      error: 'not_configured',
+      message: 'Ask-anything needs an ANTHROPIC_API_KEY environment variable set on this server. See README.md.'
+    });
+  }
+
+  try {
+    const contextJson = JSON.stringify(context).slice(0, 400000); // keep well under context limits
+    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: process.env.ANTHROPIC_ASK_MODEL || 'claude-sonnet-5',
+        max_tokens: 700,
+        system: ASK_SYSTEM_PROMPT,
+        messages: [{
+          role: 'user',
+          content: 'REPORT DATA:\n```json\n' + contextJson + '\n```\n\nQUESTION: ' + question.trim()
+        }]
+      })
+    });
+
+    if (!upstream.ok) {
+      const errText = await upstream.text();
+      return res.status(502).json({ error: 'upstream_error', message: errText.slice(0, 400) });
+    }
+    const data = await upstream.json();
+    const answer = (data.content || [])
+      .filter(block => block.type === 'text')
+      .map(block => block.text)
+      .join('\n')
+      .trim();
+    res.json({ answer: answer || '(No answer text returned.)' });
+  } catch (e) {
+    res.status(500).json({ error: 'server_error', message: String((e && e.message) || e) });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Errata Report listening on port ' + PORT));

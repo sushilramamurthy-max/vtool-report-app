@@ -58,8 +58,19 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
 
 .section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--rust);margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
-h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;margin:0 0 4px;}
-.section-dek{color:var(--muted);font-size:13.5px;margin:0 0 16px;max-width:620px;}
+
+#askSection{margin-bottom:28px;}
+.ask-bar{display:flex;gap:0;border:1px solid var(--rule-strong);}
+#askInput{flex:1;border:none;background:var(--paper-raised);padding:13px 16px;font-family:var(--font-body);font-size:14px;color:var(--ink);}
+#askInput:focus{outline:none;background:#fff;}
+#askInput::placeholder{color:var(--muted);}
+.btn-ask{font-family:var(--font-mono);font-size:12px;letter-spacing:.03em;background:var(--ink);color:var(--paper-raised);border:none;padding:0 22px;cursor:pointer;}
+.btn-ask:hover{background:var(--rust);}
+.btn-ask:disabled{background:var(--rule-strong);cursor:default;}
+.ask-answer{margin-top:0;padding:16px 18px;background:var(--paper-raised);border:1px solid var(--rule-strong);border-top:none;font-size:13.5px;line-height:1.6;white-space:pre-wrap;}
+.ask-answer.loading{color:var(--muted);font-style:italic;}
+.ask-answer.error{color:var(--rust);background:var(--rust-soft);border-color:var(--rust);}
+.ask-answer .mono{font-family:var(--font-mono);background:var(--paper);padding:1px 5px;}
 
 .callout{background:var(--rust-soft);border-left:3px solid var(--rust);padding:14px 16px;margin-bottom:20px;font-size:13.5px;}
 .callout.sage{background:var(--sage-soft);border-left-color:var(--sage);}
@@ -73,6 +84,7 @@ h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;
 .priority-row[open] summary::after{content:'–';}
 .priority-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;flex:1;}
 .priority-row h3{font-family:var(--font-display);font-size:17px;margin:0 0 3px;}
+.stage-badge{display:inline-block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;border:1px solid;padding:1px 6px;border-radius:2px;vertical-align:middle;margin-left:6px;}
 .priority-row .metrics{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
 .origin-toggle{display:inline-flex;border:1px solid var(--rule-strong);}
@@ -89,6 +101,7 @@ h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;
 .detail-block{padding-top:14px;}
 .detail-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
 .detail-block p{font-size:13px;margin:0;color:var(--ink);line-height:1.5;}
+.detail-block p+p{margin-top:6px;}
 .variant-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--rule);}
 .variant-row:last-child{border-bottom:none;}
 .variant-row .mono{font-family:var(--font-mono);color:var(--ink);word-break:break-word;}
@@ -151,6 +164,7 @@ table.data td .origin-toggle{float:right;}
 
   <main id="main" hidden>
     <section id="northstarSection"></section>
+    <section id="askSection"></section>
     <section id="prioritySection"></section>
     <section id="deepDiveSection"></section>
   </main>
@@ -168,9 +182,14 @@ function normalizeTemplate(msg){
   m=m.replace(/\d+/g,'<N>');
   return m.trim();
 }
+// Categorized the way an XML processor actually evaluates a document, in order:
+// 1. Well-formedness / namespace constraints — checked first, before any grammar is consulted.
+// 2. Validity — checked against the DTD/schema (element content models, ID/IDREF, entity declarations, attribute lists).
+// 3. Business rule — checks no DTD/XSD can express (co-occurrence, formatting, patterns) — typically Schematron-style rules layered on top.
 function categorize(template){
   const t=template.toLowerCase();
-  if(t.includes('xmlns')||t.includes('namespace'))return 'Namespace declaration';
+  if(t.includes('prefixed namespace bindings'))return 'Namespace binding';
+  if(t.includes('xmlns')&&t.includes('must be declared'))return 'Namespace attribute declaration';
   if(t.includes('entity')&&t.includes('unparsed'))return 'Unparsed entity';
   if(t.includes('begins or ends with a space')||t.includes('whitespace'))return 'Whitespace formatting';
   if(t.includes('bibliograph')||t.includes('overlap'))return 'Bibliography / references';
@@ -181,6 +200,32 @@ function categorize(template){
   if(t.includes('content of element type')||t.includes('must match'))return 'Element structure / schema mismatch';
   return 'Other';
 }
+// The XML-processing stage each category belongs to — factual, not a judgment call.
+// Distinct from the Product/Parser/User origin tag below: stage says WHERE in XML
+// processing the failure happens, origin says WHO should fix it. A stage can inform
+// origin (well-formedness/validity issues are almost always systemic) but isn't the same axis.
+const XML_STAGES = {
+  'Namespace binding': 'wellformedness',              // Namespaces-in-XML constraint: prefixed bindings must not be empty
+  'Namespace attribute declaration': 'validity',       // DTD requires an ATTLIST declaration for this attribute
+  'Unparsed entity': 'validity',                       // VC: Entity Name — ENTITY-typed attribute must name a declared unparsed entity
+  'Element structure / schema mismatch': 'validity',   // VC: Element Valid — content doesn't match the declared content model
+  'Identifier / ID conflict': 'validity',              // VC: ID / IDREF — uniqueness and reference-resolution constraints
+  'Whitespace formatting': 'businessrule',
+  'Bibliography / references': 'businessrule',
+  'Table structure': 'businessrule',
+  'DOI formatting': 'businessrule',
+  'Author / affiliation metadata': 'businessrule',
+  'Other': 'unclassified'
+};
+const STAGE_META = {
+  wellformedness: { label:'Well-formedness', short:'Well-formed', color:'var(--rust)',
+    def:'Checked before any grammar is consulted — a namespace or syntax constraint from the XML/Namespaces spec itself. If this fails, the document is broken at the most basic level, independent of any DTD or schema.' },
+  validity: { label:'Validity (DTD/Schema)', short:'Validity', color:'var(--amber)',
+    def:'The document is well-formed XML, but doesn\'t conform to the DTD or schema\'s grammar — a missing attribute declaration, a content-model mismatch, or an ID/IDREF/entity constraint.' },
+  businessrule: { label:'Business rule', short:'Business rule', color:'var(--slate)',
+    def:'Not expressible in a DTD or XSD alone — a co-occurrence, formatting, or pattern check layered on top, typically via Schematron-style rules.' },
+  unclassified: { label:'Unclassified', short:'Unclassified', color:'var(--muted)', def:'Doesn\'t cleanly fit the categories above.' }
+};
 function aggregate(rows){
   const categories={},buckets={},daily={},journals={},articles={};
   let totalInstances=0;
@@ -190,7 +235,7 @@ function aggregate(rows){
     daily[date].runs+=1;
     if(!journals[row.jid])journals[row.jid]={errorCount:0,articles:new Set()};
     journals[row.jid].articles.add(row.aid);
-    if(!articles[row.aid])articles[row.aid]={jid:row.jid,runs:0,templates:new Set(),firstSeen:date,lastSeen:date};
+    if(!articles[row.aid])articles[row.aid]={jid:row.jid,runs:0,templates:new Set(),categories:new Set(),firstSeen:date,lastSeen:date};
     const a=articles[row.aid];
     a.runs+=1;
     if(date<a.firstSeen)a.firstSeen=date;
@@ -210,12 +255,14 @@ function aggregate(rows){
       daily[date].instances+=1;
       journals[row.jid].errorCount+=1;
       a.templates.add(template);
+      a.categories.add(catLabel);
     }
   }
   return {categories,buckets,daily,journals,articles,totalInstances};
 }
 const EXPLANATIONS={
-  'Namespace declaration':'An XML namespace attribute (xmlns:mml, xmlns:tb, xmlns:xlink, etc.) that content in this document relies on was never declared. The parser can\'t resolve elements/attributes that use that prefix without it.',
+  'Namespace binding':'An attribute like xmlns:xlink has an empty or malformed value where the XML Namespaces spec requires a real, non-empty binding. This is a namespace well-formedness constraint — checked before any DTD/schema is even consulted. A portion of these instances surface as a raw parser exception (org.xml.sax.SAXParseException) rather than a clean validator message — same root cause, different surface.',
+  'Namespace attribute declaration':'The DTD requires every attribute used in the document — including xmlns:mml, xmlns:tb, etc. — to have a matching ATTLIST declaration. That declaration is missing from the DTD/template, so the parser can\'t validate the attribute even though its value is fine.',
   'Unparsed entity':'The document references an external file (a figure, scheme, or graphical-abstract image — e.g. "gr1", "sc1", "fx1") that has to be declared in the DOCTYPE as an unparsed (NDATA) entity before validation. That declaration is missing, so the parser can\'t confirm the reference resolves to a real file.',
   'Whitespace formatting':'An element\'s content starts or ends with a space/tab/linebreak where the schema requires trimmed content.',
   'Bibliography / references':'A reference list entry exists that no in-text citation points to (or two entries overlap), which the schema requires to be fully linked.',
@@ -227,7 +274,8 @@ const EXPLANATIONS={
   'Other':'A lower-volume validation error that doesn\'t fit the categories above — see the raw message pattern for specifics.'
 };
 const RECOMMENDATIONS={
-  'Namespace declaration':'Check the shared article template or DTD — the namespace declaration is almost certainly missing from one shared source file, not from individual articles.',
+  'Namespace binding':'Check whatever assembles the namespace declarations on the root element — the binding is coming through empty rather than pointing at a real namespace URI. Almost certainly one shared template/DTD issue, not per-article.',
+  'Namespace attribute declaration':'Check the shared DTD — it\'s missing ATTLIST declarations for the namespace-prefixed attributes the content actually uses.',
   'Unparsed entity':'Check the pipeline step that generates NDATA entity declarations for each article\'s graphics (figures/schemes/graphical abstract). It\'s either not running before validation, or not being merged into the DOCTYPE internal subset.',
   'Whitespace formatting':'An automated trim/normalize pass in the authoring or conversion tool would catch this before validation.',
   'Bibliography / references':'Points to citation-linking logic in the conversion tool.',
@@ -242,14 +290,29 @@ function buildSummary(agg,meta){
   const categories=Object.values(agg.categories).map(c=>({template:c.template,category:c.category,count:c.count,articleCount:c.articles.size,journalCount:c.journals.size,sample:c.sample})).sort((a,b)=>b.count-a.count);
   const totalInstances=agg.totalInstances;
   const totalJournals=Object.keys(agg.journals).length;
+  const totalArticlesWithAnyError=Object.keys(agg.articles).length;
+
+  // "If this category is fixed" — for each article that has this category, does it have
+  // ONLY this category (would become fully clean) or other categories too (still affected)?
+  const wouldBecomeClean={}, stillAffected={};
+  Object.values(agg.articles).forEach(a=>{
+    a.categories.forEach(cat=>{
+      if(a.categories.size===1){ wouldBecomeClean[cat]=(wouldBecomeClean[cat]||0)+1; }
+      else{ stillAffected[cat]=(stillAffected[cat]||0)+1; }
+    });
+  });
+
   const buckets=Object.values(agg.buckets).map(b=>{
     const articleCount=b.articles.size,journalCount=b.journals.size;
     const shareOfTotal=totalInstances?b.count/totalInstances:0;
     const journalBreadth=totalJournals?journalCount/totalJournals:0;
-    return {category:b.category,count:b.count,articleCount,journalCount,journalBreadth,shareOfTotal,
+    const stage=XML_STAGES[b.category]||'unclassified';
+    return {category:b.category,count:b.count,articleCount,journalCount,journalBreadth,shareOfTotal,stage,
       explanation:EXPLANATIONS[b.category]||EXPLANATIONS['Other'],
       recommendation:RECOMMENDATIONS[b.category]||RECOMMENDATIONS['Other'],
-      sampleArticles:b.sampleArticles};
+      sampleArticles:b.sampleArticles,
+      wouldBecomeClean:wouldBecomeClean[b.category]||0,
+      stillAffected:stillAffected[b.category]||0};
   });
   const maxCount=Math.max(1,...buckets.map(b=>b.count));
   const maxArticles=Math.max(1,...buckets.map(b=>b.articleCount));
@@ -272,7 +335,8 @@ function buildSummary(agg,meta){
 // author input) — not a verdict. Every category is one click to override in the UI,
 // and once you do, it's remembered for every future upload.
 const DEFAULT_ORIGIN_MAP = {
-  'Namespace declaration': 'product',            // near-universal breadth, shared template/DTD cause
+  'Namespace binding': 'product',                  // near-universal breadth, shared template/DTD cause
+  'Namespace attribute declaration': 'product',    // missing shared DTD declarations
   'Unparsed entity': 'product',                    // missing NDATA entity-generation step in the pipeline, not a parser bug
   'Table structure': 'product',                   // concentrated in a few journals — likely a template defect there
   'Identifier / ID conflict': 'product',           // ID generation is a tooling concern
@@ -446,6 +510,80 @@ function renderNorthStar(summary){
   renderNsSparkline();
 }
 
+// Builds the payload sent with every question — everything currently on the page,
+// so a question can be answered from data already computed, without a new upload.
+function buildAskContext(summary){
+  const ns=computeNorthStar(summary);
+  return {
+    totals: summary.totals,
+    onUs: { count: ns.mustBeZeroCount, share: ns.share,
+      product: {count: ns.breakdown.product.count, categories: ns.breakdown.product.categories},
+      parser: {count: ns.breakdown.parser.count, categories: ns.breakdown.parser.categories},
+      user: {count: ns.breakdown.user.count, categories: ns.breakdown.user.categories} },
+    categoriesDetailed: summary.buckets.map(function(b){
+      return {category:b.category, stage:b.stage, count:b.count, shareOfTotal:b.shareOfTotal,
+        articleCount:b.articleCount, journalCount:b.journalCount, origin:effectiveOrigin(b),
+        wouldBecomeClean:b.wouldBecomeClean, stillAffected:b.stillAffected};
+    }),
+    rawMessagePatterns: summary.categories,
+    dailyTrend: summary.daily,
+    topJournalsByErrorCount: summary.journals,
+    stuckArticles: summary.stuckArticles,
+    messiestArticles: summary.messiest,
+    uploadHistory: runsIndex.map(function(r){return {filename:r.filename, uploadedAt:r.uploadedAt, totalInstances:r.totalInstances, uniqueArticles:r.uniqueArticles, categoryBreakdown:r.categoryBreakdown};}),
+    currentFilename: summary.meta.filename
+  };
+}
+
+function renderAsk(summary){
+  const el=document.getElementById('askSection');
+  el.innerHTML=
+    '<div class="ask-bar">'+
+      '<input type="text" id="askInput" placeholder="Ask anything about this data — e.g. \'which journal improved the most last week?\'" />'+
+      '<button id="askBtn" class="btn-ask">Ask</button>'+
+    '</div>'+
+    '<div id="askAnswer" class="ask-answer" hidden></div>';
+
+  const input=document.getElementById('askInput');
+  const btn=document.getElementById('askBtn');
+  const answerEl=document.getElementById('askAnswer');
+
+  async function submitQuestion(){
+    const question=input.value.trim();
+    if(!question) return;
+    btn.disabled=true; btn.textContent='Asking…';
+    answerEl.hidden=false;
+    answerEl.className='ask-answer loading';
+    answerEl.textContent='Thinking…';
+    try{
+      const res=await fetch('/api/ask',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({question:question, context:buildAskContext(summary)})
+      });
+      const data=await res.json();
+      if(!res.ok){
+        answerEl.className='ask-answer error';
+        if(data.error==='not_configured'){
+          answerEl.innerHTML='Ask-anything isn\'t set up yet on this deployment. It needs an <span class="mono">ANTHROPIC_API_KEY</span> environment variable — see the README for how to add one on Render.';
+        }else{
+          answerEl.textContent='Could not get an answer: '+(data.message||data.error||'unknown error');
+        }
+      }else{
+        answerEl.className='ask-answer';
+        answerEl.textContent=data.answer;
+      }
+    }catch(e){
+      answerEl.className='ask-answer error';
+      answerEl.textContent='Could not reach the server: '+e.message;
+    }finally{
+      btn.disabled=false; btn.textContent='Ask';
+    }
+  }
+
+  btn.addEventListener('click', submitQuestion);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter') submitQuestion(); });
+}
+
 function renderPriority(summary){
   const el=document.getElementById('prioritySection');
   const mustFix=summary.buckets.filter(function(b){return ORIGIN_META[effectiveOrigin(b)].mustBeZero;}).sort(function(a,b){return b.impactScore-a.impactScore;});
@@ -508,6 +646,7 @@ function priorityRowHtml(b, summary, prevMap){
   const origin=effectiveOrigin(b);
   const auto=isAutoTagged(b);
   const cls = origin==='parser' ? 'parser' : '';
+  const stage=STAGE_META[b.stage]||STAGE_META.unclassified;
   const variants=summary.categories.filter(function(c){return c.category===b.category;}).sort(function(x,y){return y.count-x.count;});
   const samples=b.sampleArticles||[];
 
@@ -519,11 +658,20 @@ function priorityRowHtml(b, summary, prevMap){
     ? samples.map(function(s){return '<span class="sample-pill">'+esc(s.jid)+' / '+esc(s.aid)+'</span>';}).join(' ')
     : '<span class="footnote">No sample articles captured.</span>';
 
+  // "If this is fixed" — what actually happens to error volume and to affected-article count.
+  const newTotalInstances = summary.totals.totalInstances - b.count;
+  const errorPctDrop = summary.totals.totalInstances ? b.count/summary.totals.totalInstances : 0;
+  const articlePctDrop = summary.totals.uniqueArticles ? b.wouldBecomeClean/summary.totals.uniqueArticles : 0;
+  const ifFixedHtml =
+    '<p><b class="mono">'+fmtPct(errorPctDrop)+'</b> drop in total error volume — '+fmtInt(summary.totals.totalInstances)+' → '+fmtInt(newTotalInstances)+' instances.</p>'+
+    '<p><b class="mono">'+fmtPct(articlePctDrop)+'</b> of currently-failing articles go fully clean — '+fmtInt(b.wouldBecomeClean)+' of '+fmtInt(summary.totals.uniqueArticles)+' affected articles have <u>only</u> this error.</p>'+
+    (b.stillAffected>0 ? '<p class="footnote">'+fmtInt(b.stillAffected)+' more articles have this error plus others — they\'d still show up on the list, just with less on them.</p>' : '');
+
   return '<details class="priority-row '+cls+'" data-category="'+esc(b.category)+'">'+
     '<summary>'+
       '<div class="priority-row-top">'+
         '<div>'+
-          '<h3>'+esc(b.category)+'</h3>'+
+          '<h3>'+esc(b.category)+' <span class="stage-badge" style="color:'+stage.color+';border-color:'+stage.color+'">'+stage.short+'</span></h3>'+
           '<div class="metrics">'+fmtInt(b.count)+' · '+fmtPct(b.shareOfTotal)+' of all errors · '+fmtInt(b.articleCount)+' articles · '+fmtInt(b.journalCount)+' journals '+trendBadgeHtml(b,prevMap)+'</div>'+
         '</div>'+
         '<div onclick="event.stopPropagation()">'+
@@ -533,8 +681,10 @@ function priorityRowHtml(b, summary, prevMap){
       '</div>'+
     '</summary>'+
     '<div class="priority-detail">'+
+      '<div class="detail-block"><div class="detail-label">XML validation stage — '+stage.label+'</div><p>'+esc(stage.def)+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">What it is</div><p>'+esc(b.explanation)+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">What to fix</div><p>'+esc(b.recommendation)+'</p></div>'+
+      '<div class="detail-block"><div class="detail-label">If this is fixed</div>'+ifFixedHtml+'</div>'+
       '<div class="detail-block"><div class="detail-label">Sample articles (journal / article ID)</div><p>'+samplesHtml+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">Message variants under this category</div>'+variantsHtml+'</div>'+
     '</div>'+
@@ -619,6 +769,7 @@ function renderAll(summary){
   document.getElementById('emptyState').hidden=true;
   document.getElementById('main').hidden=false;
   renderNorthStar(summary);
+  renderAsk(summary);
   renderPriority(summary);
   renderDeepDive(summary);
 }
