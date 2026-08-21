@@ -5,10 +5,3 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    disk:
-      name: errata-report-data
-      mountPath: /data
-      sizeGB: 1
-    envVars:
-      - key: DB_PATH
-        value: /data/data.json

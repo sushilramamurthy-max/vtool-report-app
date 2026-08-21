@@ -21,7 +21,7 @@ Open `http://localhost:3000`.
 ## Deploy to Render
 
 1. **Push this repo to GitHub** (see commands below).
-2. In Render: **New → Blueprint**, point it at this GitHub repo. Render will read `render.yaml` and set everything up — build command, start command, and a 1GB persistent disk mounted at `/data`.
+2. In Render: **New → Blueprint**, point it at this GitHub repo. Render will read `render.yaml` and set everything up on the free plan.
 3. Click **Apply**. First deploy takes a couple of minutes.
 4. Once live, Render gives you a URL like `https://errata-report.onrender.com` — that's what you share with your team/customers.
 
@@ -29,12 +29,18 @@ If you'd rather click through the UI instead of using the blueprint:
 - **New → Web Service** → connect this repo
 - Build command: `npm install`
 - Start command: `npm start`
-- Add a **Disk**: mount path `/data`, size 1GB (Starter plan or above — the free plan doesn't support disks)
-- Add an environment variable: `DB_PATH` = `/data/data.json`
 
-### About the free plan
+### About the free plan (read this)
 
-Render's free web-service plan doesn't support persistent disks. Without a disk, uploaded runs are stored in the container's local filesystem and will be **wiped on every redeploy or restart** (free-plan services also spin down after inactivity, and spinning back up counts as a restart). It'll work fine for trying it out, but for real weekly use, a low-cost paid plan with the disk attached is what keeps your upload history intact.
+`render.yaml` is set up for the **free plan**, which does not support persistent disks. That means uploaded runs are stored in the container's local filesystem and will be **wiped whenever the service redeploys or restarts** — free-plan services also spin down after inactivity, and spinning back up counts as a restart. Fine for trying it out; not fine for keeping a real upload history.
+
+**When you're ready for persistence** (a low-cost paid plan, e.g. Starter):
+1. In the Render dashboard, change the service's plan from Free to Starter (or above).
+2. Go to the service → **Disks** → **Add Disk**: mount path `/data`, size 1GB.
+3. Go to **Environment** → add a variable: `DB_PATH` = `/data/data.json`.
+4. Redeploy. From then on, uploads persist across restarts/redeploys.
+
+(There's also a `render-with-disk.yaml` in this repo you can rename to `render.yaml` once you've upgraded the plan, to get the disk set up automatically via blueprint instead of doing it by hand.)
 
 ## Push to GitHub
 
