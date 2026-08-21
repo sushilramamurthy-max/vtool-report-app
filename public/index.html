@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Direction to Zero — Proof Central Output XML Validation Report</title>
+<title>Zero Errors, Every Article — Proof Central Output XML Validation Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
@@ -140,7 +140,7 @@ table.data th.num{text-align:right;}
         <input type="file" id="fileInput" accept=".csv" hidden />
       </div>
     </div>
-    <h1 class="title">Direction to Zero</h1>
+    <h1 class="title">Zero Errors, Every Article</h1>
     <div class="run-select-row" id="runSelectRow" style="display:none;">
       <label style="color:var(--muted);">Viewing —</label>
       <select id="runSelect"></select>
@@ -446,11 +446,11 @@ function renderNorthStar(summary){
         '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustFixCount)+'</div>'+
         '<div class="ns-hero-side">'+
           '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' errors</div>'+
-          '<div class="ns-hero-target">aiming for zero</div>'+
+          '<div class="ns-hero-target">so every article passes clean</div>'+
         '</div>'+
         '<canvas id="nsSparkline" class="ns-sparkline"></canvas>'+
       '</div>'+
-      '<p class="ns-why">These only happen because of how the document was built — not because of anything a reader or author did.</p>'+
+      '<p class="ns-why">A fix here doesn\'t just clear one article — it clears every future one that would\'ve hit the same error.</p>'+
       '<div class="ns-split">'+
         splitRow('wellformedness')+
         splitRow('validity')+

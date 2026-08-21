@@ -1,4 +1,4 @@
-# Direction to Zero — Proof Central Output XML Validation Report
+# Zero Errors, Every Article — Proof Central Output XML Validation Report
 
 A single-page error-elimination tracker, built around one number: **how many errors can only be caused by how the document was built** — not by anything a reader or author did — vs. content-related errors that are tracked separately.
 
