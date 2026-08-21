@@ -1,0 +1,16 @@
+{
+  "name": "errata-report",
+  "version": "1.0.0",
+  "description": "Error-insights dashboard for XML validation runs, shared across the team via a small Node backend.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

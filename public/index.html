@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Errata Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#F3EFE4;
+  --paper-raised:#FBF9F3;
+  --ink:#26201A;
+  --muted:#6E6657;
+  --rule:#D9D2C0;
+  --rule-strong:#B9B09A;
+  --rust:#A6402B;
+  --rust-soft:#E7D2CB;
+  --sage:#4B6358;
+  --sage-soft:#D8E1DB;
+  --amber:#B8862E;
+  --amber-soft:#EFDFBB;
+  --font-display:'Source Serif 4', Georgia, serif;
+  --font-body:'Inter', -apple-system, sans-serif;
+  --font-mono:'IBM Plex Mono', 'Courier New', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.45;
+}
+
+#app{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+
+/* ---------- Masthead ---------- */
+.masthead{border-bottom:3px double var(--ink);padding-bottom:18px;margin-bottom:6px;}
+.masthead-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.kicker{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.btn-upload{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:.04em;
+  background:var(--ink);
+  color:var(--paper-raised);
+  border:none;
+  padding:9px 16px;
+  cursor:pointer;
+  border-radius:1px;
+  transition:background .15s ease;
+}
+.btn-upload:hover{background:var(--rust);}
+.btn-upload:active{transform:translateY(1px);}
+
+.title{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:44px;
+  letter-spacing:-0.01em;
+  margin:10px 0 4px;
+}
+.subtitle{
+  font-family:var(--font-display);
+  font-style:italic;
+  color:var(--muted);
+  font-size:16px;
+  margin:0 0 14px;
+}
+.masthead-meta{
+  font-size:13px;
+  color:var(--muted);
+  display:flex;
+  gap:22px;
+  flex-wrap:wrap;
+  align-items:baseline;
+}
+.masthead-meta b{color:var(--ink);font-family:var(--font-mono);font-weight:600;}
+
+.run-select-row{margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;}
+.run-select-row label{color:var(--muted);}
+.run-select-row select{
+  font-family:var(--font-mono);
+  font-size:12px;
+  background:var(--paper-raised);
+  border:1px solid var(--rule-strong);
+  padding:5px 8px;
+  color:var(--ink);
+}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;
+  gap:2px;
+  border-bottom:1px solid var(--rule);
+  margin:22px 0 26px;
+  overflow-x:auto;
+}
+.tab{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  background:none;
+  border:none;
+  padding:10px 16px;
+  cursor:pointer;
+  color:var(--muted);
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--rust);border-bottom-color:var(--rust);}
+
+/* ---------- Empty state ---------- */
+.empty-state{
+  text-align:center;
+  padding:70px 20px;
+  color:var(--muted);
+  font-family:var(--font-display);
+  font-size:18px;
+  border:1px dashed var(--rule-strong);
+  border-radius:2px;
+}
+.empty-state .hint{font-family:var(--font-body);font-size:13px;margin-top:10px;color:var(--muted);}
+
+/* ---------- Panels & sections ---------- */
+.panel{}
+.section-label{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--rust);
+  margin:0 0 10px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--rule);
+}
+h2.section-title{
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:600;
+  margin:0 0 4px;
+}
+.section-dek{color:var(--muted);font-size:14px;margin:0 0 18px;max-width:640px;}
+
+/* stat strip */
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;border:1px solid var(--rule);margin-bottom:30px;}
+.stat{padding:16px 18px;border-right:1px solid var(--rule);}
+.stat:last-child{border-right:none;}
+.stat .num{font-family:var(--font-mono);font-size:26px;font-weight:600;color:var(--ink);}
+.stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.stat.flag .num{color:var(--rust);}
+
+/* callout */
+.callout{
+  background:var(--rust-soft);
+  border-left:3px solid var(--rust);
+  padding:16px 18px;
+  margin-bottom:26px;
+  font-size:14px;
+}
+.callout b{font-family:var(--font-mono);}
+.callout.sage{background:var(--sage-soft);border-left-color:var(--sage);}
+.callout.amber{background:var(--amber-soft);border-left-color:var(--amber);}
+
+/* bar rows (css bar chart, print-ledger style) */
+.bar-row{
+  display:grid;
+  grid-template-columns:220px 1fr 90px;
+  gap:12px;
+  align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid var(--rule);
+  font-size:13px;
+}
+.bar-row:last-child{border-bottom:none;}
+.bar-row .label{font-weight:500;}
+.bar-row .label .sub{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px;}
+.bar-track{background:var(--rule);height:8px;position:relative;}
+.bar-fill{background:var(--rust);height:100%;}
+.bar-fill.sage{background:var(--sage);}
+.bar-fill.amber{background:var(--amber);}
+.bar-row .count{font-family:var(--font-mono);text-align:right;color:var(--ink);}
+
+/* priority cards (errata / corrigenda style) */
+.priority-card{
+  border:1px solid var(--rule);
+  margin-bottom:16px;
+  padding:18px 20px;
+  position:relative;
+}
+.priority-card .rank{
+  font-family:var(--font-display);
+  font-size:34px;
+  font-weight:700;
+  color:var(--rule-strong);
+  float:right;
+  line-height:1;
+}
+.priority-card h3{
+  font-family:var(--font-display);
+  font-size:19px;
+  margin:0 0 6px;
+  padding-right:50px;
+}
+.priority-card .impact-line{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--rust);
+  margin-bottom:10px;
+}
+.priority-card p{font-size:13.5px;color:var(--ink);margin:0;}
+.priority-card .tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+.tag{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  background:var(--paper);
+  border:1px solid var(--rule-strong);
+  padding:2px 7px;
+  color:var(--muted);
+}
+
+/* tables */
+table.data{width:100%;border-collapse:collapse;font-size:13px;}
+table.data th{
+  text-align:left;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+  border-bottom:1px solid var(--ink);
+  padding:6px 8px;
+}
+table.data td{padding:7px 8px;border-bottom:1px solid var(--rule);}
+table.data tr:hover td{background:var(--paper-raised);}
+table.data td.mono, table.data th.mono{font-family:var(--font-mono);}
+table.data td.num{text-align:right;font-family:var(--font-mono);}
+table.data th.num{text-align:right;}
+
+.chart-wrap{border:1px solid var(--rule);padding:18px;margin-bottom:26px;background:var(--paper-raised);}
+.chart-wrap canvas{max-height:280px;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:720px){.two-col{grid-template-columns:1fr;} .bar-row{grid-template-columns:130px 1fr 60px;} .title{font-size:32px;}}
+
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper-raised);
+  font-family:var(--font-mono);font-size:12.5px;
+  padding:10px 18px;border-radius:2px;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);
+  z-index:50;
+}
+
+.footnote{font-size:11.5px;color:var(--muted);margin-top:6px;}
+.small-muted{color:var(--muted);font-size:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <div class="kicker">Engineering &amp; Product · Content Validation Desk</div>
+      <div>
+        <button class="btn-upload" id="uploadBtn">+ Upload CSV run</button>
+        <input type="file" id="fileInput" accept=".csv" hidden />
+      </div>
+    </div>
+    <h1 class="title">The Errata Report</h1>
+    <p class="subtitle">What's breaking validation, what to fix first, and whether it's working.</p>
+    <div class="masthead-meta" id="mastheadMeta">No data loaded yet — upload a CSV to begin.</div>
+    <div class="run-select-row" id="runSelectRow" style="display:none;">
+      <label>Viewing run —</label>
+      <select id="runSelect"></select>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" style="display:none;">
+    <button data-tab="overview" class="tab active">Overview</button>
+    <button data-tab="types" class="tab">Error Types</button>
+    <button data-tab="priority" class="tab">Fix Priority</button>
+    <button data-tab="trends" class="tab">Trends</button>
+    <button data-tab="intel" class="tab">Article Intelligence</button>
+  </nav>
+
+  <main id="main">
+    <div id="emptyState" class="empty-state">
+      Upload your first error CSV to generate the report.
+      <div class="hint">Expected columns: <code>error</code> (list of validation messages), <code>jid</code> (journal id), <code>aid</code> (article id), <code>start_time</code>.<br/>Uploaded data is shared with everyone who opens this app.</div>
+    </div>
+    <section id="panel-overview" class="panel" hidden></section>
+    <section id="panel-types" class="panel" hidden></section>
+    <section id="panel-priority" class="panel" hidden></section>
+    <section id="panel-trends" class="panel" hidden></section>
+    <section id="panel-intel" class="panel" hidden></section>
+  </main>
+
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   CORE AGGREGATION LOGIC
+   ===================================================================== */
+
+function normalizeTemplate(msg) {
+  let m = String(msg);
+  m = m.replace(/systemId: file:[^\s;]+/g, 'systemId: file:<FILE>');
+  m = m.replace(/lineNumber: \d+/g, 'lineNumber: <N>');
+  m = m.replace(/columnNumber: \d+/g, 'columnNumber: <N>');
+  m = m.replace(/"[^"]*"/g, '"<X>"');
+  m = m.replace(/row [\d, ]+/g, 'row <LIST> ');
+  m = m.replace(/\d+/g, '<N>');
+  return m.trim();
+}
+
+function categorize(template) {
+  const t = template.toLowerCase();
+  if (t.includes('xmlns') || t.includes('namespace')) return 'Namespace declaration';
+  if (t.includes('entity') && t.includes('unparsed')) return 'Unparsed entity';
+  if (t.includes('begins or ends with a space') || t.includes('whitespace')) return 'Whitespace formatting';
+  if (t.includes('bibliograph') || t.includes('overlap')) return 'Bibliography / references';
+  if (t.includes('not all entries') || t.includes('row')) return 'Table structure';
+  if (t.includes('doi')) return 'DOI formatting';
+  if (t.includes('id must be unique') || t.includes('identifier')) return 'Identifier / ID conflict';
+  if (t.includes('author') || t.includes('affiliation') || t.includes('given-name') || t.includes('surname')) return 'Author / affiliation metadata';
+  if (t.includes('content of element type') || t.includes('must match')) return 'Element structure / schema mismatch';
+  return 'Other';
+}
+
+function aggregate(rows) {
+  const categories = {}, buckets = {}, daily = {}, journals = {}, articles = {};
+  let totalInstances = 0;
+
+  for (const row of rows) {
+    const date = String(row.start_time).slice(0, 10);
+    if (!daily[date]) daily[date] = { instances: 0, articlesWithError: new Set(), runs: 0 };
+    daily[date].runs += 1;
+
+    if (!journals[row.jid]) journals[row.jid] = { errorCount: 0, articles: new Set() };
+    journals[row.jid].articles.add(row.aid);
+
+    if (!articles[row.aid]) articles[row.aid] = { jid: row.jid, runs: 0, templates: new Set(), firstSeen: date, lastSeen: date };
+    const a = articles[row.aid];
+    a.runs += 1;
+    if (date < a.firstSeen) a.firstSeen = date;
+    if (date > a.lastSeen) a.lastSeen = date;
+
+    daily[date].articlesWithError.add(row.aid);
+
+    for (const msg of row.error) {
+      totalInstances += 1;
+      const template = normalizeTemplate(msg);
+      const catLabel = categorize(msg);
+      if (!categories[template]) {
+        categories[template] = { template, category: catLabel, count: 0, articles: new Set(), journals: new Set(), sample: msg };
+      }
+      const c = categories[template];
+      c.count += 1; c.articles.add(row.aid); c.journals.add(row.jid);
+
+      if (!buckets[catLabel]) buckets[catLabel] = { category: catLabel, count: 0, articles: new Set(), journals: new Set() };
+      const b = buckets[catLabel];
+      b.count += 1; b.articles.add(row.aid); b.journals.add(row.jid);
+
+      daily[date].instances += 1;
+      journals[row.jid].errorCount += 1;
+      a.templates.add(template);
+    }
+  }
+  return { categories, buckets, daily, journals, articles, totalInstances };
+}
+
+const RECOMMENDATIONS = {
+  'Namespace declaration': 'Namespace attributes (xmlns:mml, xmlns:tb, xmlns:xlink, etc.) are missing or malformed. This is almost always a single shared cause — an outdated DTD/schema or article template — so one fix can clear a large share of this bucket at once.',
+  'Unparsed entity': 'Entities referenced in content are not declared as unparsed in the DOCTYPE. Check the entity declaration set and the character-encoding step in the conversion pipeline.',
+  'Whitespace formatting': 'Elements contain leading/trailing whitespace. An automated trim/normalize pass in the authoring or conversion tool would catch this before validation runs.',
+  'Bibliography / references': 'Reference list entries are not linked to in-text citations, or citation entries overlap. Points to the citation-linking logic in the conversion tool.',
+  'Table structure': 'Table rows have mismatched or missing entries. Usually traces back to how source tables (Word/LaTeX/Excel) are converted to XML.',
+  'Author / affiliation metadata': 'Formatting issues in author names, initials, or affiliations. Likely an upstream metadata-extraction issue rather than the XML itself.',
+  'DOI formatting': 'DOIs do not match the expected pattern. Check the DOI generation or lookup step feeding the record.',
+  'Identifier / ID conflict': 'Element IDs are duplicated or a referenced identifier is missing. Check ID-generation logic in the conversion tool.',
+  'Element structure / schema mismatch': 'Element content does not match the expected schema pattern. Usually a deeper structural issue that needs case-by-case review.',
+  'Other': 'Mixed / lower-volume validation errors. Worth a manual pass once the top categories above are addressed.'
+};
+
+function buildSummary(agg, meta) {
+  const categories = Object.values(agg.categories).map(c => ({
+    template: c.template, category: c.category, count: c.count,
+    articleCount: c.articles.size, journalCount: c.journals.size, sample: c.sample
+  })).sort((a, b) => b.count - a.count);
+
+  const totalInstances = agg.totalInstances;
+  const buckets = Object.values(agg.buckets).map(b => {
+    const articleCount = b.articles.size, journalCount = b.journals.size;
+    const shareOfTotal = totalInstances ? b.count / totalInstances : 0;
+    return { category: b.category, count: b.count, articleCount, journalCount, shareOfTotal, recommendation: RECOMMENDATIONS[b.category] || RECOMMENDATIONS['Other'] };
+  });
+  const maxCount = Math.max(1, ...buckets.map(b => b.count));
+  const maxArticles = Math.max(1, ...buckets.map(b => b.articleCount));
+  const maxJournals = Math.max(1, ...buckets.map(b => b.journalCount));
+  buckets.forEach(b => { b.impactScore = 0.5 * (b.count / maxCount) + 0.3 * (b.articleCount / maxArticles) + 0.2 * (b.journalCount / maxJournals); });
+  buckets.sort((a, b) => b.impactScore - a.impactScore);
+
+  const daily = Object.keys(agg.daily).sort().map(date => ({
+    date, instances: agg.daily[date].instances,
+    articlesWithError: agg.daily[date].articlesWithError.size,
+    runs: agg.daily[date].runs
+  }));
+
+  const journals = Object.entries(agg.journals).map(([jid, j]) => ({
+    jid, errorCount: j.errorCount, articleCount: j.articles.size,
+    errorsPerArticle: j.articles.size ? j.errorCount / j.articles.size : 0
+  })).sort((a, b) => b.errorCount - a.errorCount).slice(0, 40);
+
+  const stuckArticles = Object.entries(agg.articles).map(([aid, a]) => ({
+    aid, jid: a.jid, runs: a.runs, distinctErrorTypes: a.templates.size, firstSeen: a.firstSeen, lastSeen: a.lastSeen
+  })).sort((a, b) => b.runs - a.runs).slice(0, 40);
+
+  const messiest = Object.entries(agg.articles).map(([aid, a]) => ({
+    aid, jid: a.jid, runs: a.runs, distinctErrorTypes: a.templates.size, firstSeen: a.firstSeen, lastSeen: a.lastSeen
+  })).sort((a, b) => b.distinctErrorTypes - a.distinctErrorTypes).slice(0, 40);
+
+  return {
+    meta,
+    totals: {
+      totalInstances, totalRuns: meta.rowCount,
+      uniqueArticles: Object.keys(agg.articles).length,
+      uniqueJournals: Object.keys(agg.journals).length,
+      avgErrorsPerRun: meta.rowCount ? totalInstances / meta.rowCount : 0,
+      dateStart: daily.length ? daily[0].date : null,
+      dateEnd: daily.length ? daily[daily.length - 1].date : null
+    },
+    buckets, categories, daily, journals, stuckArticles, messiest
+  };
+}
+
+/* =====================================================================
+   STATE & STORAGE
+   ===================================================================== */
+let currentSummary = null;
+let runsIndex = [];
+let dailyChart = null, crossRunChart = null;
+
+function fmtInt(n){ return Number(n||0).toLocaleString('en-US'); }
+function fmtPct(n){ return (n*100).toFixed(1) + '%'; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function showToast(msg, ms=3200){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>{ t.hidden = true; }, ms);
+}
+
+async function loadIndex(){
+  try {
+    const res = await fetch('/api/runs');
+    runsIndex = res.ok ? await res.json() : [];
+  } catch(e) { runsIndex = []; }
+}
+
+async function saveRun(summary){
+  const res = await fetch('/api/runs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(summary)
+  });
+  if (!res.ok) throw new Error('Server rejected the upload (' + res.status + ')');
+  const data = await res.json();
+  return data.id;
+}
+
+async function loadRun(id){
+  const res = await fetch('/api/runs/' + encodeURIComponent(id));
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+/* =====================================================================
+   CSV INGESTION
+   ===================================================================== */
+document.getElementById('uploadBtn').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  showToast('Reading ' + file.name + ' …', 60000);
+  try {
+    const text = await file.text();
+    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+    if (!parsed.data.length) { showToast('No rows found in that file.'); return; }
+
+    const rows = [];
+    for (const r of parsed.data) {
+      if (!r.jid || !r.aid || !r.start_time || !r.error) continue;
+      let errArr;
+      try { errArr = JSON.parse(r.error); if (!Array.isArray(errArr)) errArr = [String(r.error)]; }
+      catch(e) { errArr = [String(r.error)]; }
+      rows.push({ error: errArr, jid: r.jid, aid: r.aid, start_time: r.start_time });
+    }
+    if (!rows.length) { showToast('Could not find error/jid/aid/start_time columns in that file.'); return; }
+
+    const agg = aggregate(rows);
+    const meta = { filename: file.name, uploadedAt: new Date().toISOString(), rowCount: rows.length };
+    const summary = buildSummary(agg, meta);
+
+    const id = await saveRun(summary);
+    await loadIndex();
+
+    currentSummary = summary;
+    populateRunSelect(id);
+    renderAll(summary);
+    showToast('Uploaded ' + file.name + ' — visible to your whole team now.');
+  } catch(err) {
+    console.error(err);
+    showToast('Could not process that file: ' + err.message);
+  } finally {
+    e.target.value = '';
+  }
+});
+
+/* =====================================================================
+   RUN SELECTOR
+   ===================================================================== */
+function populateRunSelect(selectId){
+  const row = document.getElementById('runSelectRow');
+  const sel = document.getElementById('runSelect');
+  if (!runsIndex.length) { row.style.display = 'none'; return; }
+  row.style.display = runsIndex.length > 1 ? 'flex' : 'none';
+  sel.innerHTML = runsIndex.map(r =>
+    `<option value="${r.id}">${esc(r.filename)} — ${new Date(r.uploadedAt).toLocaleString()} (${fmtInt(r.totalInstances)} errors)</option>`
+  ).join('');
+  sel.value = selectId;
+}
+
+document.getElementById('runSelect').addEventListener('change', async (e) => {
+  const id = e.target.value;
+  showToast('Loading run…', 60000);
+  const summary = await loadRun(id);
+  if (summary) { currentSummary = summary; renderAll(summary); showToast('Loaded ' + summary.meta.filename); }
+});
+
+/* =====================================================================
+   TABS
+   ===================================================================== */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.hidden = true);
+    document.getElementById('panel-' + btn.dataset.tab).hidden = false;
+    if (btn.dataset.tab === 'trends' && currentSummary) renderTrendsCharts(currentSummary);
+    if (btn.dataset.tab === 'overview' && currentSummary) renderOverviewChart(currentSummary);
+  });
+});
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function renderAll(summary){
+  document.getElementById('emptyState').hidden = true;
+  document.getElementById('tabs').style.display = 'flex';
+  document.querySelectorAll('.panel').forEach(p => p.hidden = true);
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab || 'overview';
+  document.getElementById('panel-' + activeTab).hidden = false;
+
+  renderMasthead(summary);
+  renderOverview(summary);
+  renderTypes(summary);
+  renderPriority(summary);
+  renderIntel(summary);
+  renderTrendsPanel(summary);
+  if (activeTab === 'trends') renderTrendsCharts(summary);
+  if (activeTab === 'overview') renderOverviewChart(summary);
+}
+
+function renderMasthead(summary){
+  const t = summary.totals;
+  document.getElementById('mastheadMeta').innerHTML =
+    `<span><b>${fmtInt(t.totalRuns)}</b> validation runs</span>` +
+    `<span><b>${fmtInt(t.totalInstances)}</b> error instances</span>` +
+    `<span><b>${fmtInt(t.uniqueArticles)}</b> articles</span>` +
+    `<span><b>${fmtInt(t.uniqueJournals)}</b> journals</span>` +
+    `<span>${esc(t.dateStart||'?')} → ${esc(t.dateEnd||'?')}</span>` +
+    `<span class="small-muted">source: ${esc(summary.meta.filename)}</span>`;
+}
+
+function renderOverview(summary){
+  const t = summary.totals;
+  const top = summary.buckets[0];
+  const el = document.getElementById('panel-overview');
+  el.innerHTML = `
+    <div class="section-label">Issue No. 1 · Overview</div>
+    <h2 class="section-title">What's breaking, at a glance</h2>
+    <p class="section-dek">Every row in this file is a failed validation. Here's the shape of the problem across ${fmtInt(t.totalRuns)} validation attempts.</p>
+
+    <div class="stat-strip">
+      <div class="stat"><div class="num">${fmtInt(t.totalInstances)}</div><div class="lbl">Error instances</div></div>
+      <div class="stat"><div class="num">${t.avgErrorsPerRun.toFixed(1)}</div><div class="lbl">Avg. errors / run</div></div>
+      <div class="stat flag"><div class="num">${fmtInt(t.uniqueArticles)}</div><div class="lbl">Articles affected</div></div>
+      <div class="stat"><div class="num">${fmtInt(t.uniqueJournals)}</div><div class="lbl">Journals affected</div></div>
+      <div class="stat"><div class="num">${summary.buckets.length}</div><div class="lbl">Error categories</div></div>
+    </div>
+
+    ${top ? `<div class="callout"><b>${esc(top.category)}</b> alone accounts for ${fmtPct(top.shareOfTotal)} of all error instances (${fmtInt(top.count)} of ${fmtInt(t.totalInstances)}), touching ${fmtInt(top.articleCount)} articles across ${fmtInt(top.journalCount)} journals. See the Fix Priority tab for the full ranked list.</div>` : ''}
+
+    <div class="section-label" style="margin-top:8px;">Daily error volume</div>
+    <div class="chart-wrap"><canvas id="overviewChart"></canvas></div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-label">Top 5 error categories</div>
+        <div id="overviewBars"></div>
+      </div>
+      <div>
+        <div class="section-label">Top journals by error count</div>
+        <div id="overviewJournals"></div>
+      </div>
+    </div>
+  `;
+
+  const maxB = Math.max(1, ...summary.buckets.slice(0,5).map(b=>b.count));
+  document.getElementById('overviewBars').innerHTML = summary.buckets.slice(0,5).map(b => barRow(b.category, b.count, b.count/maxB, `${fmtInt(b.count)}`)).join('');
+
+  const topJ = summary.journals.slice(0,5);
+  const maxJ = Math.max(1, ...topJ.map(j=>j.errorCount));
+  document.getElementById('overviewJournals').innerHTML = topJ.map(j => barRow(j.jid, j.errorCount, j.errorCount/maxJ, `${fmtInt(j.errorCount)}`, 'amber')).join('');
+}
+
+function barRow(label, count, frac, right, cls){
+  return `<div class="bar-row">
+    <div class="label">${esc(label)}</div>
+    <div class="bar-track"><div class="bar-fill${cls?(' '+cls):''}" style="width:${Math.max(2,frac*100)}%"></div></div>
+    <div class="count">${right}</div>
+  </div>`;
+}
+
+function renderOverviewChart(summary){
+  const ctx = document.getElementById('overviewChart');
+  if (!ctx) return;
+  if (dailyChart) { dailyChart.destroy(); dailyChart = null; }
+  const labels = summary.daily.map(d => d.date.slice(5));
+  dailyChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Error instances', data: summary.daily.map(d=>d.instances), borderColor:'#A6402B', backgroundColor:'rgba(166,64,43,0.12)', fill:true, tension:.25, pointRadius:2 },
+      { label: 'Articles with errors', data: summary.daily.map(d=>d.articlesWithError), borderColor:'#4B6358', backgroundColor:'transparent', tension:.25, pointRadius:2, borderDash:[4,3] }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{family:'IBM Plex Mono', size:11} } } },
+      scales:{ x:{ ticks:{ font:{family:'IBM Plex Mono', size:10} }, grid:{color:'#E7E1D2'} },
+               y:{ ticks:{ font:{family:'IBM Plex Mono', size:10} }, grid:{color:'#E7E1D2'} } }
+    }
+  });
+  ctx.parentElement.style.height = '280px';
+}
+
+function renderTypes(summary){
+  const el = document.getElementById('panel-types');
+  const maxCount = Math.max(1, ...summary.categories.map(c=>c.count));
+  el.innerHTML = `
+    <div class="section-label">Issue No. 2 · Error Types</div>
+    <h2 class="section-title">Every distinct error, by frequency</h2>
+    <p class="section-dek">${summary.categories.length} distinct error patterns detected, grouped here at the raw message level for engineering. Dynamic values (attribute names, file paths, line numbers) are normalized so repeats of the same error collapse into one row.</p>
+    <table class="data">
+      <thead><tr><th>Error message pattern</th><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th></tr></thead>
+      <tbody>
+        ${summary.categories.map(c => `<tr>
+          <td class="mono" style="max-width:420px;">${esc(c.template)}</td>
+          <td>${esc(c.category)}</td>
+          <td class="num">${fmtInt(c.count)}</td>
+          <td class="num">${fmtInt(c.articleCount)}</td>
+          <td class="num">${fmtInt(c.journalCount)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderPriority(summary){
+  const el = document.getElementById('panel-priority');
+  const t = summary.totals;
+  const top3 = summary.buckets.slice(0,3);
+  const top3Share = top3.reduce((s,b)=>s+b.shareOfTotal,0);
+  el.innerHTML = `
+    <div class="section-label">Issue No. 3 · Fix Priority</div>
+    <h2 class="section-title">What to fix first, for maximum impact</h2>
+    <p class="section-dek">Ranked by a blend of volume, how many articles are affected, and how many journals are affected — so a fix that's both big and broad rises to the top.</p>
+    <div class="callout sage"><b>Fixing just the top ${top3.length} categories</b> would eliminate roughly ${fmtPct(top3Share)} of all current error instances.</div>
+    <div id="priorityCards"></div>
+  `;
+  const cards = document.getElementById('priorityCards');
+  cards.innerHTML = summary.buckets.map((b, i) => `
+    <div class="priority-card">
+      <div class="rank">${String(i+1).padStart(2,'0')}</div>
+      <h3>${esc(b.category)}</h3>
+      <div class="impact-line">${fmtInt(b.count)} instances · ${fmtPct(b.shareOfTotal)} of all errors · impact score ${b.impactScore.toFixed(2)}</div>
+      <p>${esc(b.recommendation)}</p>
+      <div class="tags">
+        <span class="tag">${fmtInt(b.articleCount)} articles affected</span>
+        <span class="tag">${fmtInt(b.journalCount)} journals affected</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTrendsCharts(summary){
+  const canvas = document.getElementById('dailyTrendChart');
+  if (canvas) {
+    if (window._dailyChart2) { window._dailyChart2.destroy(); }
+    window._dailyChart2 = new Chart(canvas, {
+      type:'bar',
+      data:{ labels: summary.daily.map(d=>d.date.slice(5)),
+        datasets:[{ label:'Error instances / day', data: summary.daily.map(d=>d.instances), backgroundColor:'#A6402B' }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{ x:{ ticks:{font:{family:'IBM Plex Mono',size:10}}, grid:{display:false} },
+                 y:{ ticks:{font:{family:'IBM Plex Mono',size:10}}, grid:{color:'#E7E1D2'} } } }
+    });
+    canvas.parentElement.style.height = '260px';
+  }
+  const canvas2 = document.getElementById('crossRunChart');
+  if (canvas2) {
+    if (window._crossRunChart) window._crossRunChart.destroy();
+    const runs = [...runsIndex].reverse();
+    window._crossRunChart = new Chart(canvas2, {
+      type:'bar',
+      data:{ labels: runs.map(r=>new Date(r.uploadedAt).toLocaleDateString()),
+        datasets:[{ label:'Total error instances at upload', data: runs.map(r=>r.totalInstances), backgroundColor:'#4B6358' }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{ x:{ ticks:{font:{family:'IBM Plex Mono',size:10}}, grid:{display:false} },
+                 y:{ ticks:{font:{family:'IBM Plex Mono',size:10}}, grid:{color:'#E7E1D2'} } } }
+    });
+    canvas2.parentElement.style.height = '220px';
+  }
+}
+
+function renderTrendsPanel(summary){
+  const el = document.getElementById('panel-trends');
+  let crossRunHtml = '';
+  if (runsIndex.length > 1) {
+    const latest = runsIndex[0], prev = runsIndex[1];
+    const delta = latest.totalInstances - prev.totalInstances;
+    const pct = prev.totalInstances ? (delta/prev.totalInstances*100) : 0;
+    const dir = delta <= 0 ? 'down' : 'up';
+    const cls = delta <= 0 ? 'sage' : '';
+    crossRunHtml = `
+      <div class="callout ${cls}"><b>${dir === 'down' ? '▼' : '▲'} ${Math.abs(pct).toFixed(1)}%</b> change in total error instances vs. the previous upload (${esc(prev.filename)}, ${new Date(prev.uploadedAt).toLocaleDateString()}).</div>
+      <div class="section-label">Across uploaded runs over time</div>
+      <div class="chart-wrap"><canvas id="crossRunChart"></canvas></div>
+    `;
+  } else {
+    crossRunHtml = `<div class="callout amber">Only one run uploaded so far. Upload next week's CSV here and this section will chart whether the error total is going up or down over time.</div>`;
+  }
+  el.innerHTML = `
+    <div class="section-label">Issue No. 4 · Trends</div>
+    <h2 class="section-title">Is it actually getting better?</h2>
+    <p class="section-dek">Day-by-day volume within this dataset, plus a comparison across every CSV your team has uploaded.</p>
+    <div class="section-label">Within this dataset — daily volume</div>
+    <div class="chart-wrap"><canvas id="dailyTrendChart"></canvas></div>
+    ${crossRunHtml}
+  `;
+}
+
+function renderIntel(summary){
+  const el = document.getElementById('panel-intel');
+  const stuck = summary.stuckArticles.slice(0, 15);
+  const messy = summary.messiest.slice(0, 15);
+  const worstJournals = [...summary.journals].sort((a,b)=>b.errorsPerArticle-a.errorsPerArticle).filter(j=>j.articleCount>=3).slice(0,10);
+
+  el.innerHTML = `
+    <div class="section-label">Issue No. 5 · Article Intelligence</div>
+    <h2 class="section-title">Signals worth a closer look</h2>
+    <p class="section-dek">Patterns that a flat error count won't show you — articles stuck in retry loops, articles with many different problems at once, and journals with a disproportionate error rate.</p>
+
+    ${stuck.length && stuck[0].runs >= 10 ? `<div class="callout amber"><b>Article ${esc(stuck[0].aid)}</b> (${esc(stuck[0].jid)}) was re-validated ${fmtInt(stuck[0].runs)} times and still failed — a strong sign it's stuck in a retry loop rather than progressing toward a fix.</div>` : ''}
+
+    <div class="section-label">Stuck articles — most re-validation attempts</div>
+    <table class="data">
+      <thead><tr><th class="mono">Article ID</th><th class="mono">Journal</th><th class="num">Runs</th><th class="num">Distinct error types</th><th>First seen</th><th>Last seen</th></tr></thead>
+      <tbody>${stuck.map(a => `<tr><td class="mono">${esc(a.aid)}</td><td class="mono">${esc(a.jid)}</td><td class="num">${fmtInt(a.runs)}</td><td class="num">${a.distinctErrorTypes}</td><td>${esc(a.firstSeen)}</td><td>${esc(a.lastSeen)}</td></tr>`).join('')}</tbody>
+    </table>
+
+    <div class="section-label" style="margin-top:26px;">Messiest articles — most distinct error types at once</div>
+    <table class="data">
+      <thead><tr><th class="mono">Article ID</th><th class="mono">Journal</th><th class="num">Distinct error types</th><th class="num">Runs</th></tr></thead>
+      <tbody>${messy.map(a => `<tr><td class="mono">${esc(a.aid)}</td><td class="mono">${esc(a.jid)}</td><td class="num">${a.distinctErrorTypes}</td><td class="num">${fmtInt(a.runs)}</td></tr>`).join('')}</tbody>
+    </table>
+
+    <div class="section-label" style="margin-top:26px;">Journals with the highest errors-per-article rate</div>
+    <p class="footnote">Limited to journals with at least 3 articles in this dataset, so a single bad article doesn't skew the ranking.</p>
+    <table class="data">
+      <thead><tr><th class="mono">Journal</th><th class="num">Errors / article</th><th class="num">Total errors</th><th class="num">Articles</th></tr></thead>
+      <tbody>${worstJournals.map(j => `<tr><td class="mono">${esc(j.jid)}</td><td class="num">${j.errorsPerArticle.toFixed(1)}</td><td class="num">${fmtInt(j.errorCount)}</td><td class="num">${fmtInt(j.articleCount)}</td></tr>`).join('')}</tbody>
+    </table>
+  `;
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+(async function boot(){
+  try {
+    await loadIndex();
+    if (runsIndex.length) {
+      const latest = runsIndex[0];
+      const summary = await loadRun(latest.id);
+      if (summary) {
+        currentSummary = summary;
+        populateRunSelect(latest.id);
+        renderAll(summary);
+      }
+    }
+  } catch(e) {
+    console.error('Boot error', e);
+  }
+})();
+</script>
+</body>
+</html>
