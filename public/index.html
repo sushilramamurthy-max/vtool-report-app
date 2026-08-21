@@ -40,27 +40,22 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .empty-state{text-align:center;padding:70px 20px;color:var(--muted);font-family:var(--font-display);font-size:18px;border:1px dashed var(--rule-strong);border-radius:2px;}
 .empty-state .hint{font-family:var(--font-body);font-size:13px;margin-top:10px;color:var(--muted);}
 
-.northstar{border:2px solid var(--ink);padding:24px 26px;margin-bottom:28px;background:var(--paper-raised);}
-.northstar-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--rust);margin-bottom:6px;}
-.northstar-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;}
-.northstar-num{font-family:var(--font-display);font-weight:700;font-size:56px;line-height:1;color:var(--rust);}
-.northstar-num.good{color:var(--sage);}
-.northstar-target{font-family:var(--font-mono);font-size:13px;color:var(--muted);}
-.northstar-sub{margin-top:14px;display:flex;gap:26px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
-.northstar-sub b{font-family:var(--font-mono);color:var(--ink);}
-.northstar-sub .tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
-
-.origin-breakdown{margin-top:16px;border-top:1px solid var(--rule);padding-top:14px;}
-.origin-line{margin-bottom:10px;}
-.origin-line:last-child{margin-bottom:0;}
-.origin-line-head{font-size:13.5px;}
-.origin-line-head b{font-family:var(--font-mono);font-weight:600;}
-.origin-line-pct{color:var(--muted);font-size:12.5px;}
-.origin-line-names{font-size:12px;color:var(--muted);margin:2px 0 0 14px;}
-.tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
-
-.btn-secondary{margin-top:16px;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.03em;background:var(--paper);color:var(--ink);border:1px solid var(--rule-strong);padding:8px 14px;cursor:pointer;border-radius:1px;}
-.btn-secondary:hover{border-color:var(--ink);}
+.northstar{border:2px solid var(--ink);padding:28px 30px;margin-bottom:28px;background:var(--paper-raised);}
+.ns-kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--rust);margin-bottom:8px;}
+.ns-hero-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+.ns-hero-num{font-family:var(--font-display);font-weight:700;font-size:72px;line-height:1;color:var(--rust);}
+.ns-hero-num.good{color:var(--sage);}
+.ns-hero-side{font-family:var(--font-mono);font-size:13px;color:var(--muted);line-height:1.6;}
+.ns-hero-target{color:var(--ink);}
+.ns-sparkline{width:140px;height:44px;margin-left:auto;}
+.ns-split{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule);display:flex;gap:34px;flex-wrap:wrap;}
+.ns-split-row{font-size:14px;}
+.ns-split-row b{font-family:var(--font-mono);font-weight:600;}
+.ns-split-names{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;max-width:280px;}
+.ns-user-line{margin-top:12px;font-size:12px;color:var(--muted);}
+.ns-copy-link{display:inline-block;margin-top:16px;font-family:var(--font-mono);font-size:11.5px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule-strong);}
+.ns-copy-link:hover{color:var(--ink);border-bottom-color:var(--ink);}
+.tag-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
 
 .section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--rust);margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
 h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;margin:0 0 4px;}
@@ -71,14 +66,40 @@ h2.section-title{font-family:var(--font-display);font-size:21px;font-weight:600;
 .callout.amber{background:var(--amber-soft);border-left-color:var(--amber);}
 
 .priority-list{margin-bottom:30px;}
-.priority-row{border:1px solid var(--rule);border-left:4px solid var(--rust);padding:14px 16px;margin-bottom:10px;background:var(--paper-raised);}
+.priority-row{border:1px solid var(--rule);border-left:4px solid var(--rust);margin-bottom:10px;background:var(--paper-raised);}
 .priority-row.parser{border-left-color:var(--slate);}
-.priority-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.priority-row summary{text-transform:none;font-family:var(--font-body);padding:14px 16px;color:var(--ink);}
+.priority-row summary::after{content:'+';font-size:18px;color:var(--rule-strong);align-self:flex-start;margin-left:10px;}
+.priority-row[open] summary::after{content:'–';}
+.priority-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;flex:1;}
 .priority-row h3{font-family:var(--font-display);font-size:17px;margin:0 0 3px;}
-.priority-row .metrics{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);}
-.priority-row p{font-size:13px;margin:8px 0 0;color:var(--ink);}
-.origin-select{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--rule-strong);background:var(--paper);padding:4px 6px;cursor:pointer;}
-.auto-flag{font-family:var(--font-mono);font-size:10px;color:var(--amber);margin-left:6px;}
+.priority-row .metrics{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+.origin-toggle{display:inline-flex;border:1px solid var(--rule-strong);}
+.origin-toggle.small{transform:scale(.88);transform-origin:right center;}
+.origin-btn{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;background:var(--paper);color:var(--muted);border:none;border-right:1px solid var(--rule-strong);padding:6px 10px;cursor:pointer;}
+.origin-btn:last-child{border-right:none;}
+.origin-btn:hover{background:var(--paper-raised);color:var(--ink);}
+.origin-btn.active.product{background:var(--rust);color:var(--paper-raised);}
+.origin-btn.active.parser{background:var(--slate);color:var(--paper-raised);}
+.origin-btn.active.user{background:var(--sage);color:var(--paper-raised);}
+.auto-flag{font-family:var(--font-mono);font-size:10px;color:var(--amber);margin-top:4px;text-align:right;}
+
+.priority-detail{padding:0 16px 16px;border-top:1px solid var(--rule);margin-top:2px;}
+.detail-block{padding-top:14px;}
+.detail-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rust);margin-bottom:5px;}
+.detail-block p{font-size:13px;margin:0;color:var(--ink);line-height:1.5;}
+.variant-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--rule);}
+.variant-row:last-child{border-bottom:none;}
+.variant-row .mono{font-family:var(--font-mono);color:var(--ink);word-break:break-word;}
+.variant-count{font-family:var(--font-mono);color:var(--muted);white-space:nowrap;}
+.sample-pill{display:inline-block;font-family:var(--font-mono);font-size:11px;background:var(--paper);border:1px solid var(--rule-strong);padding:3px 8px;margin:2px 4px 2px 0;border-radius:1px;}
+
+.trend-badge{font-family:var(--font-mono);font-size:10.5px;padding:2px 7px;border-radius:2px;white-space:nowrap;}
+.trend-badge.down{background:var(--sage-soft);color:var(--sage);}
+.trend-badge.up{background:var(--rust-soft);color:var(--rust);}
+.trend-badge.flat{background:var(--slate-soft);color:var(--slate);}
+.trend-badge.new{background:var(--amber-soft);color:var(--amber);}
 
 details{border:1px solid var(--rule);margin-bottom:12px;background:var(--paper-raised);}
 details summary{cursor:pointer;padding:12px 16px;font-family:var(--font-mono);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);list-style:none;display:flex;justify-content:space-between;align-items:center;}
@@ -95,7 +116,7 @@ table.data tr:hover td{background:var(--paper);}
 table.data td.mono,table.data th.mono{font-family:var(--font-mono);}
 table.data td.num{text-align:right;font-family:var(--font-mono);}
 table.data th.num{text-align:right;}
-table.data select.origin-select-sm{font-size:10.5px;padding:2px 4px;}
+table.data td .origin-toggle{float:right;}
 
 .chart-wrap{border:1px solid var(--rule);padding:16px;margin-bottom:20px;background:var(--paper-raised);}
 .chart-wrap canvas{max-height:240px;}
@@ -103,7 +124,7 @@ table.data select.origin-select-sm{font-size:10.5px;padding:2px 4px;}
 .footnote{font-size:11px;color:var(--muted);margin-top:6px;}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper-raised);font-family:var(--font-mono);font-size:12.5px;padding:10px 18px;border-radius:2px;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:50;}
 
-@media(max-width:640px){.title{font-size:28px;} .northstar-num{font-size:40px;}}
+@media(max-width:640px){.title{font-size:28px;} .ns-hero-num{font-size:48px;} .ns-sparkline{display:none;}}
 </style>
 </head>
 <body>
@@ -117,10 +138,8 @@ table.data select.origin-select-sm{font-size:10.5px;padding:2px 4px;}
       </div>
     </div>
     <h1 class="title">Path to Zero</h1>
-    <p class="subtitle">Zero product and parser errors. User-caused errors are tracked separately, not against us.</p>
-    <div class="masthead-meta" id="mastheadMeta">No data loaded yet — upload a CSV to begin.</div>
     <div class="run-select-row" id="runSelectRow" style="display:none;">
-      <label style="color:var(--muted);">Viewing run —</label>
+      <label style="color:var(--muted);">Viewing —</label>
       <select id="runSelect"></select>
     </div>
   </header>
@@ -133,7 +152,6 @@ table.data select.origin-select-sm{font-size:10.5px;padding:2px 4px;}
   <main id="main" hidden>
     <section id="northstarSection"></section>
     <section id="prioritySection"></section>
-    <section id="trendSection"></section>
     <section id="deepDiveSection"></section>
   </main>
 </div>
@@ -185,9 +203,10 @@ function aggregate(rows){
       if(!categories[template])categories[template]={template,category:catLabel,count:0,articles:new Set(),journals:new Set(),sample:msg};
       const c=categories[template];
       c.count+=1;c.articles.add(row.aid);c.journals.add(row.jid);
-      if(!buckets[catLabel])buckets[catLabel]={category:catLabel,count:0,articles:new Set(),journals:new Set()};
+      if(!buckets[catLabel])buckets[catLabel]={category:catLabel,count:0,articles:new Set(),journals:new Set(),sampleArticles:[]};
       const b=buckets[catLabel];
       b.count+=1;b.articles.add(row.aid);b.journals.add(row.jid);
+      if(b.sampleArticles.length<6 && !b.sampleArticles.some(s=>s.aid===row.aid)) b.sampleArticles.push({aid:row.aid,jid:row.jid});
       daily[date].instances+=1;
       journals[row.jid].errorCount+=1;
       a.templates.add(template);
@@ -195,17 +214,29 @@ function aggregate(rows){
   }
   return {categories,buckets,daily,journals,articles,totalInstances};
 }
+const EXPLANATIONS={
+  'Namespace declaration':'An XML namespace attribute (xmlns:mml, xmlns:tb, xmlns:xlink, etc.) that content in this document relies on was never declared. The parser can\'t resolve elements/attributes that use that prefix without it.',
+  'Unparsed entity':'The document references an external file (a figure, scheme, or graphical-abstract image — e.g. "gr1", "sc1", "fx1") that has to be declared in the DOCTYPE as an unparsed (NDATA) entity before validation. That declaration is missing, so the parser can\'t confirm the reference resolves to a real file.',
+  'Whitespace formatting':'An element\'s content starts or ends with a space/tab/linebreak where the schema requires trimmed content.',
+  'Bibliography / references':'A reference list entry exists that no in-text citation points to (or two entries overlap), which the schema requires to be fully linked.',
+  'Table structure':'A table row has more or fewer cell entries than the table\'s column count declares.',
+  'Author / affiliation metadata':'An author name, initials, or affiliation field doesn\'t match the expected format (e.g. stray whitespace inside initials).',
+  'DOI formatting':'A DOI value doesn\'t match the expected DOI pattern.',
+  'Identifier / ID conflict':'An element ID is duplicated within the document, or something references an ID that doesn\'t exist.',
+  'Element structure / schema mismatch':'An element\'s content doesn\'t match the content model the schema expects for that element type.',
+  'Other':'A lower-volume validation error that doesn\'t fit the categories above — see the raw message pattern for specifics.'
+};
 const RECOMMENDATIONS={
-  'Namespace declaration':'Namespace attributes (xmlns:mml, xmlns:tb, xmlns:xlink, etc.) are missing or malformed. Almost always one shared cause — an outdated DTD/schema or article template.',
-  'Unparsed entity':'Entities referenced in content are not declared as unparsed in the DOCTYPE. Check the entity declaration set and character-encoding step.',
-  'Whitespace formatting':'Elements contain leading/trailing whitespace. An automated trim/normalize pass in the authoring or conversion tool would catch this before validation.',
-  'Bibliography / references':'Reference list entries are not linked to in-text citations. Points to citation-linking logic in the conversion tool.',
-  'Table structure':'Table rows have mismatched or missing entries. Usually traces back to how source tables are converted to XML.',
-  'Author / affiliation metadata':'Formatting issues in author names, initials, or affiliations. Likely upstream metadata-extraction.',
-  'DOI formatting':'DOIs do not match the expected pattern. Check the DOI generation or lookup step.',
-  'Identifier / ID conflict':'Element IDs are duplicated or a referenced identifier is missing. Check ID-generation logic in the conversion tool.',
-  'Element structure / schema mismatch':'Element content does not match the expected schema pattern. Needs case-by-case review.',
-  'Other':'Mixed / lower-volume validation errors.'
+  'Namespace declaration':'Check the shared article template or DTD — the namespace declaration is almost certainly missing from one shared source file, not from individual articles.',
+  'Unparsed entity':'Check the pipeline step that generates NDATA entity declarations for each article\'s graphics (figures/schemes/graphical abstract). It\'s either not running before validation, or not being merged into the DOCTYPE internal subset.',
+  'Whitespace formatting':'An automated trim/normalize pass in the authoring or conversion tool would catch this before validation.',
+  'Bibliography / references':'Points to citation-linking logic in the conversion tool.',
+  'Table structure':'Usually traces back to how source tables are converted to XML — check the table-conversion step for the affected journal(s).',
+  'Author / affiliation metadata':'Likely upstream metadata-extraction — check the author-parsing step.',
+  'DOI formatting':'Check the DOI generation or lookup step feeding the record.',
+  'Identifier / ID conflict':'Check ID-generation logic in the conversion tool.',
+  'Element structure / schema mismatch':'Needs case-by-case review — pull a sample article and compare against the schema\'s content model for that element.',
+  'Other':'Worth a manual pass once the categories above are addressed.'
 };
 function buildSummary(agg,meta){
   const categories=Object.values(agg.categories).map(c=>({template:c.template,category:c.category,count:c.count,articleCount:c.articles.size,journalCount:c.journals.size,sample:c.sample})).sort((a,b)=>b.count-a.count);
@@ -215,7 +246,10 @@ function buildSummary(agg,meta){
     const articleCount=b.articles.size,journalCount=b.journals.size;
     const shareOfTotal=totalInstances?b.count/totalInstances:0;
     const journalBreadth=totalJournals?journalCount/totalJournals:0;
-    return {category:b.category,count:b.count,articleCount,journalCount,journalBreadth,shareOfTotal,recommendation:RECOMMENDATIONS[b.category]||RECOMMENDATIONS['Other']};
+    return {category:b.category,count:b.count,articleCount,journalCount,journalBreadth,shareOfTotal,
+      explanation:EXPLANATIONS[b.category]||EXPLANATIONS['Other'],
+      recommendation:RECOMMENDATIONS[b.category]||RECOMMENDATIONS['Other'],
+      sampleArticles:b.sampleArticles};
   });
   const maxCount=Math.max(1,...buckets.map(b=>b.count));
   const maxArticles=Math.max(1,...buckets.map(b=>b.articleCount));
@@ -239,7 +273,7 @@ function buildSummary(agg,meta){
 // and once you do, it's remembered for every future upload.
 const DEFAULT_ORIGIN_MAP = {
   'Namespace declaration': 'product',            // near-universal breadth, shared template/DTD cause
-  'Unparsed entity': 'parser',                    // DOCTYPE/entity handling — parser-level
+  'Unparsed entity': 'product',                    // missing NDATA entity-generation step in the pipeline, not a parser bug
   'Table structure': 'product',                   // concentrated in a few journals — likely a template defect there
   'Identifier / ID conflict': 'product',           // ID generation is a tooling concern
   'Element structure / schema mismatch': 'product', // ambiguous — defaults to counting against us until reviewed
@@ -261,7 +295,7 @@ const ORIGIN_META = {
   user:    { label:'User content',   dot:'var(--sage)', mustBeZero:false }
 };
 
-let currentSummary=null, runsIndex=[], originTags={};
+let currentSummary=null, currentRunId=null, runsIndex=[], originTags={};
 let trendChart=null;
 
 function fmtInt(n){return Number(n||0).toLocaleString('en-US');}
@@ -310,6 +344,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
     const id=await saveRun(summary);
     await loadIndex();
     currentSummary=summary;
+    currentRunId=id;
     populateRunSelect(id);
     renderAll(summary);
     showToast('Uploaded '+file.name+' — visible to your whole team now.');
@@ -328,7 +363,7 @@ function populateRunSelect(selectId){
 }
 document.getElementById('runSelect').addEventListener('change', async function(e){
   const summary=await loadRun(e.target.value);
-  if(summary){currentSummary=summary;renderAll(summary);showToast('Loaded '+summary.meta.filename);}
+  if(summary){currentSummary=summary;currentRunId=e.target.value;renderAll(summary);showToast('Loaded '+summary.meta.filename);}
 });
 
 function computeNorthStar(summary){
@@ -349,19 +384,17 @@ function computeNorthStar(summary){
 function buildStakeholderSummary(summary){
   const ns=computeNorthStar(summary);
   const lines=[];
-  lines.push('Error Elimination Summary — '+esc_plain(summary.meta.filename)+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
+  lines.push('Path to Zero — '+esc_plain(summary.meta.filename)+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
   lines.push('');
-  lines.push('Total error instances: '+fmtInt(summary.totals.totalInstances)+' across '+fmtInt(summary.totals.uniqueArticles)+' articles, '+fmtInt(summary.totals.uniqueJournals)+' journals.');
-  lines.push('Product-preventable error rate: '+fmtPct(ns.share)+' (target: 0%).');
+  lines.push('On us right now: '+fmtInt(ns.mustBeZeroCount)+' errors ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total). Target: zero.');
   lines.push('');
-  lines.push('PRODUCT ERRORS: '+fmtInt(ns.breakdown.product.count)+' instances ('+fmtPct(summary.totals.totalInstances?ns.breakdown.product.count/summary.totals.totalInstances:0)+' of all errors)');
-  ns.breakdown.product.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances, '+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals'); });
+  lines.push('PRODUCT: '+fmtInt(ns.breakdown.product.count));
+  ns.breakdown.product.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
   lines.push('');
-  lines.push('PARSER ERRORS: '+fmtInt(ns.breakdown.parser.count)+' instances ('+fmtPct(summary.totals.totalInstances?ns.breakdown.parser.count/summary.totals.totalInstances:0)+' of all errors)');
-  ns.breakdown.parser.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances, '+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals'); });
+  lines.push('PARSER: '+fmtInt(ns.breakdown.parser.count));
+  ns.breakdown.parser.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
   lines.push('');
-  lines.push('USER-CONTENT ERRORS (not counted against product goal): '+fmtInt(ns.breakdown.user.count)+' instances');
-  ns.breakdown.user.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' instances'); });
+  lines.push('Not on us (user content, tracked separately): '+fmtInt(ns.breakdown.user.count));
   return lines.join('\n');
 }
 function esc_plain(s){ return String(s); }
@@ -369,109 +402,158 @@ function esc_plain(s){ return String(s); }
 function renderNorthStar(summary){
   const ns=computeNorthStar(summary);
   const el=document.getElementById('northstarSection');
-  const goodClass = ns.share <= 0.02 ? 'good' : '';
-  const productShare = summary.totals.totalInstances ? ns.breakdown.product.count/summary.totals.totalInstances : 0;
-  const parserShare = summary.totals.totalInstances ? ns.breakdown.parser.count/summary.totals.totalInstances : 0;
-  const userShare = summary.totals.totalInstances ? ns.breakdown.user.count/summary.totals.totalInstances : 0;
+  const goodClass = ns.mustBeZeroCount === 0 ? 'good' : '';
 
-  function originLine(key, meta){
+  function splitRow(key, meta){
     const b = ns.breakdown[key];
-    const names = b.categories.map(function(c){return c.category+' ('+fmtInt(c.count)+')';}).join(', ');
-    return '<div class="origin-line">'+
-      '<div class="origin-line-head"><span class="tag-dot" style="background:'+meta.dot+'"></span><b>'+meta.label+' errors: '+fmtInt(b.count)+'</b>'+
-      '<span class="origin-line-pct"> · '+fmtPct(summary.totals.totalInstances ? b.count/summary.totals.totalInstances : 0)+' of all errors</span></div>'+
-      (b.categories.length ? '<div class="origin-line-names">'+esc(names)+'</div>' : '<div class="origin-line-names">None currently tagged.</div>')+
-    '</div>';
+    const names = b.categories.map(function(c){return c.category;}).join(', ');
+    return '<div class="ns-split-row"><span class="tag-dot" style="background:'+meta.dot+'"></span>'+
+      '<b>'+meta.label+': '+fmtInt(b.count)+'</b>'+
+      '<span class="ns-split-names">'+(names?esc(names):'none')+'</span></div>';
   }
 
   el.innerHTML=
     '<div class="northstar">'+
-      '<div class="northstar-label">North Star · Product-Preventable Error Rate</div>'+
-      '<div class="northstar-row">'+
-        '<div class="northstar-num '+goodClass+'">'+fmtPct(ns.share)+'</div>'+
-        '<div class="northstar-target">of all error volume is on us · target: 0%</div>'+
+      '<div class="ns-kicker">What\'s on us</div>'+
+      '<div class="ns-hero-row">'+
+        '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustBeZeroCount)+'</div>'+
+        '<div class="ns-hero-side">'+
+          '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' errors</div>'+
+          '<div class="ns-hero-target">target — zero</div>'+
+        '</div>'+
+        '<canvas id="nsSparkline" class="ns-sparkline"></canvas>'+
       '</div>'+
-      '<div class="origin-breakdown">'+
-        originLine('product', ORIGIN_META.product)+
-        originLine('parser', ORIGIN_META.parser)+
-        originLine('user', ORIGIN_META.user)+
+      '<div class="ns-split">'+
+        splitRow('product', ORIGIN_META.product)+
+        splitRow('parser', ORIGIN_META.parser)+
       '</div>'+
-      '<button class="btn-secondary" id="copySummaryBtn">Copy stakeholder summary</button>'+
+      '<div class="ns-user-line">'+fmtInt(ns.breakdown.user.count)+' more errors are user-caused — tracked, not counted here.</div>'+
+      '<a href="#" class="ns-copy-link" id="copySummaryBtn">Copy summary for stakeholders →</a>'+
     '</div>';
 
-  document.getElementById('copySummaryBtn').addEventListener('click', async function(){
+  document.getElementById('copySummaryBtn').addEventListener('click', async function(e){
+    e.preventDefault();
     const text = buildStakeholderSummary(summary);
     try{
       await navigator.clipboard.writeText(text);
-      showToast('Summary copied — paste it into an email or Slack update.');
+      showToast('Copied — paste into an email or Slack update.');
     }catch(e){
-      showToast('Could not copy automatically — select the text in the console instead.');
+      showToast('Could not copy automatically — see the browser console.');
       console.log(text);
     }
   });
+
+  renderNsSparkline();
 }
 
 function renderPriority(summary){
   const el=document.getElementById('prioritySection');
   const mustFix=summary.buckets.filter(function(b){return ORIGIN_META[effectiveOrigin(b)].mustBeZero;}).sort(function(a,b){return b.impactScore-a.impactScore;});
   const userCaused=summary.buckets.filter(function(b){return !ORIGIN_META[effectiveOrigin(b)].mustBeZero;});
+  const prevMap=getPreviousCategoryMap();
 
   el.innerHTML=
-    '<div class="section-label">This week\'s must-fix list</div>'+
-    '<h2 class="section-title">Product &amp; parser errors, ranked by impact</h2>'+
-    '<p class="section-dek">These are the only categories that count against the zero-error goal. Ranked by volume × breadth. Reassign the origin tag on any row that\'s mis-classified — it\'ll stay corrected for every future upload.</p>'+
-    (mustFix.length===0?'<div class="callout sage">Nothing tagged Product or Parser right now.</div>':'')+
+    '<div class="section-label">Fix these, in order</div>'+
+    (mustFix.length===0?'<div class="callout sage">Nothing on us right now.</div>':'')+
     '<div class="priority-list" id="mustFixList"></div>'+
     '<details>'+
-      '<summary>User-content errors — not counted against the goal ('+userCaused.length+' categories, '+fmtInt(userCaused.reduce(function(s,b){return s+b.count;},0))+' instances)</summary>'+
+      '<summary>User-caused ('+userCaused.length+' categories, '+fmtInt(userCaused.reduce(function(s,b){return s+b.count;},0))+' errors) — not on this list</summary>'+
       '<div class="details-body" id="userCausedList"></div>'+
     '</details>';
 
-  document.getElementById('mustFixList').innerHTML = mustFix.map(priorityRowHtml).join('');
+  document.getElementById('mustFixList').innerHTML = mustFix.map(function(b){return priorityRowHtml(b, summary, prevMap);}).join('');
   document.getElementById('userCausedList').innerHTML = userCaused.length
     ? '<table class="data"><thead><tr><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th><th>Origin</th></tr></thead><tbody>'+userCaused.map(userRowHtml).join('')+'</tbody></table>'
     : '<p class="footnote">None.</p>';
 
-  wireOriginSelects(summary);
+  wireOriginControls(summary);
 }
 
-function priorityRowHtml(b){
+// Finds the immediately-previous upload's per-category counts, so each row can show
+// "this vs last time" instead of leadership having to cross-reference a chart.
+function getPreviousCategoryMap(){
+  if(!currentRunId || runsIndex.length<2) return null;
+  const idx=runsIndex.findIndex(function(r){return r.id===currentRunId;});
+  if(idx<0 || idx+1>=runsIndex.length) return null;
+  const prev=runsIndex[idx+1];
+  const map={};
+  (prev.categoryBreakdown||[]).forEach(function(c){ map[c.category]=c; });
+  return map;
+}
+
+function trendBadgeHtml(b, prevMap){
+  if(!prevMap) return '';
+  const prev=prevMap[b.category];
+  if(!prev) return '<span class="trend-badge new">new</span>';
+  if(prev.count===0) return b.count===0 ? '<span class="trend-badge flat">still 0</span>' : '<span class="trend-badge up">regressed</span>';
+  const delta=(b.count-prev.count)/prev.count*100;
+  if(Math.abs(delta)<1) return '<span class="trend-badge flat">flat</span>';
+  const dir=delta<0?'down':'up';
+  const arrow=delta<0?'▼':'▲';
+  return '<span class="trend-badge '+dir+'">'+arrow+' '+Math.abs(delta).toFixed(0)+'%</span>';
+}
+
+// Three buttons, not a dropdown — tagging a category is a decision, not a form field.
+function originToggleHtml(category, current, small){
+  const opts=['product','parser','user'];
+  const shortLabel={product:'Product',parser:'Parser',user:'User'};
+  return '<div class="origin-toggle'+(small?' small':'')+'" data-category="'+esc(category)+'">'+
+    opts.map(function(o){
+      return '<button type="button" class="origin-btn'+(o===current?' active '+o:'')+'" data-origin="'+o+'">'+shortLabel[o]+'</button>';
+    }).join('')+
+  '</div>';
+}
+
+function priorityRowHtml(b, summary, prevMap){
   const origin=effectiveOrigin(b);
   const auto=isAutoTagged(b);
   const cls = origin==='parser' ? 'parser' : '';
-  return '<div class="priority-row '+cls+'" data-category="'+esc(b.category)+'">'+
-    '<div class="priority-row-top">'+
-      '<div>'+
-        '<h3>'+esc(b.category)+'</h3>'+
-        '<div class="metrics">'+fmtInt(b.count)+' instances · '+fmtPct(b.shareOfTotal)+' of all errors · '+fmtInt(b.articleCount)+' articles · '+fmtInt(b.journalCount)+' journals</div>'+
+  const variants=summary.categories.filter(function(c){return c.category===b.category;}).sort(function(x,y){return y.count-x.count;});
+  const samples=b.sampleArticles||[];
+
+  const variantsHtml = variants.map(function(v){
+    return '<div class="variant-row"><span class="mono">'+esc(v.template)+'</span><span class="variant-count">'+fmtInt(v.count)+'</span></div>';
+  }).join('');
+
+  const samplesHtml = samples.length
+    ? samples.map(function(s){return '<span class="sample-pill">'+esc(s.jid)+' / '+esc(s.aid)+'</span>';}).join(' ')
+    : '<span class="footnote">No sample articles captured.</span>';
+
+  return '<details class="priority-row '+cls+'" data-category="'+esc(b.category)+'">'+
+    '<summary>'+
+      '<div class="priority-row-top">'+
+        '<div>'+
+          '<h3>'+esc(b.category)+'</h3>'+
+          '<div class="metrics">'+fmtInt(b.count)+' · '+fmtPct(b.shareOfTotal)+' of all errors · '+fmtInt(b.articleCount)+' articles · '+fmtInt(b.journalCount)+' journals '+trendBadgeHtml(b,prevMap)+'</div>'+
+        '</div>'+
+        '<div onclick="event.stopPropagation()">'+
+          originToggleHtml(b.category, origin, false)+
+          (auto?'<div class="auto-flag">auto-tagged</div>':'')+
+        '</div>'+
       '</div>'+
-      '<div>'+
-        '<select class="origin-select" data-category="'+esc(b.category)+'">'+
-          '<option value="product" '+(origin==='product'?'selected':'')+'>Product defect</option>'+
-          '<option value="parser" '+(origin==='parser'?'selected':'')+'>Parser defect</option>'+
-          '<option value="user" '+(origin==='user'?'selected':'')+'>User content</option>'+
-        '</select>'+
-        (auto?'<span class="auto-flag">auto-tagged</span>':'')+
-      '</div>'+
+    '</summary>'+
+    '<div class="priority-detail">'+
+      '<div class="detail-block"><div class="detail-label">What it is</div><p>'+esc(b.explanation)+'</p></div>'+
+      '<div class="detail-block"><div class="detail-label">What to fix</div><p>'+esc(b.recommendation)+'</p></div>'+
+      '<div class="detail-block"><div class="detail-label">Sample articles (journal / article ID)</div><p>'+samplesHtml+'</p></div>'+
+      '<div class="detail-block"><div class="detail-label">Message variants under this category</div>'+variantsHtml+'</div>'+
     '</div>'+
-    '<p>'+esc(b.recommendation)+'</p>'+
-  '</div>';
+  '</details>';
 }
 function userRowHtml(b){
   const origin=effectiveOrigin(b);
   return '<tr>'+
     '<td>'+esc(b.category)+'</td><td class="num">'+fmtInt(b.count)+'</td><td class="num">'+fmtInt(b.articleCount)+'</td><td class="num">'+fmtInt(b.journalCount)+'</td>'+
-    '<td><select class="origin-select origin-select-sm" data-category="'+esc(b.category)+'">'+
-      '<option value="product" '+(origin==='product'?'selected':'')+'>Product</option>'+
-      '<option value="parser" '+(origin==='parser'?'selected':'')+'>Parser</option>'+
-      '<option value="user" '+(origin==='user'?'selected':'')+'>User</option>'+
-    '</select></td>'+
+    '<td>'+originToggleHtml(b.category, origin, true)+'</td>'+
   '</tr>';
 }
-function wireOriginSelects(summary){
-  document.querySelectorAll('.origin-select').forEach(function(sel){
-    sel.addEventListener('change', async function(e){
-      const category=e.target.dataset.category, origin=e.target.value;
+function wireOriginControls(summary){
+  document.querySelectorAll('.origin-toggle').forEach(function(group){
+    group.addEventListener('click', async function(e){
+      const btn=e.target.closest('.origin-btn');
+      if(!btn) return;
+      e.stopPropagation();
+      const category=group.dataset.category, origin=btn.dataset.origin;
       await setOriginTag(category, origin);
       showToast('Tagged "'+category+'" as '+ORIGIN_META[origin].label+' — remembered for future uploads.');
       renderNorthStar(summary);
@@ -480,36 +562,30 @@ function wireOriginSelects(summary){
   });
 }
 
-function renderTrend(summary){
-  const el=document.getElementById('trendSection');
-  el.innerHTML=
-    '<div class="section-label">Trend</div>'+
-    '<h2 class="section-title">Is the North Star actually moving?</h2>'+
-    '<p class="section-dek">Product-preventable error rate across every upload your team has made.</p>'+
-    '<div class="chart-wrap"><canvas id="trendChart"></canvas></div>'+
-    (runsIndex.length<2?'<p class="footnote">Only one run so far — upload next week\'s CSV and this fills in.</p>':'<p class="footnote">Estimated from each run\'s top 5 categories at upload time.</p>');
-  const canvas=document.getElementById('trendChart');
+// Small inline trend line — lives inside the North Star card, not a separate section.
+// "Is it moving" is the same question as "what's the number," not a different one.
+function renderNsSparkline(){
+  const canvas=document.getElementById('nsSparkline');
+  if(!canvas) return;
   if(trendChart){trendChart.destroy();trendChart=null;}
+  if(runsIndex.length<2) return; // nothing to compare yet — leave it empty rather than draw a flat meaningless line
   const runs=runsIndex.slice().reverse();
-  const shares=runs.map(function(r){
-    let must=0,user=0;
-    (r.topCategories||[]).forEach(function(c){
+  const series=runs.map(function(r){
+    let must=0;
+    (r.categoryBreakdown||[]).forEach(function(c){
       const origin=originTags[c.category]||'product';
-      if(ORIGIN_META[origin] && ORIGIN_META[origin].mustBeZero) must+=c.count; else user+=c.count;
+      if(ORIGIN_META[origin] && ORIGIN_META[origin].mustBeZero) must+=c.count;
     });
-    const t=must+user;
-    return t? must/t*100 : 0;
+    return must;
   });
   trendChart=new Chart(canvas,{
     type:'line',
-    data:{labels:runs.map(function(r){return new Date(r.uploadedAt).toLocaleDateString();}),
-      datasets:[{label:'Product-preventable error rate (%)',data:shares,borderColor:'#A6402B',backgroundColor:'rgba(166,64,43,0.12)',fill:true,tension:.2,pointRadius:3}]},
+    data:{labels:runs.map(function(){return '';}),
+      datasets:[{data:series,borderColor:'#A6402B',backgroundColor:'transparent',tension:.25,pointRadius:0,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{x:{ticks:{font:{family:'IBM Plex Mono',size:10}},grid:{display:false}},
-              y:{min:0,ticks:{font:{family:'IBM Plex Mono',size:10}},grid:{color:'#E7E1D2'}}}}
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}}}
   });
-  canvas.parentElement.style.height='240px';
 }
 
 function renderDeepDive(summary){
@@ -524,35 +600,26 @@ function renderDeepDive(summary){
   function journalRows(){return worstJournals.map(function(j){return '<tr><td class="mono">'+esc(j.jid)+'</td><td class="num">'+j.errorsPerArticle.toFixed(1)+'</td><td class="num">'+fmtInt(j.errorCount)+'</td><td class="num">'+fmtInt(j.articleCount)+'</td></tr>';}).join('');}
 
   el.innerHTML=
-    '<div class="section-label">Deep dive (optional)</div>'+
-    '<h2 class="section-title">Detail, when you need it</h2>'+
-    '<details><summary>All error categories, raw ('+summary.categories.length+' patterns)</summary>'+
-      '<div class="details-body"><table class="data"><thead><tr><th>Message pattern</th><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th></tr></thead><tbody>'+catRows()+'</tbody></table></div>'+
-    '</details>'+
+    '<div class="section-label">Everything else</div>'+
     '<details><summary>Stuck articles — most re-validation attempts</summary>'+
       '<div class="details-body"><table class="data"><thead><tr><th class="mono">Article</th><th class="mono">Journal</th><th class="num">Runs</th><th class="num">Distinct errors</th><th>First seen</th><th>Last seen</th></tr></thead><tbody>'+stuckRows()+'</tbody></table></div>'+
+    '</details>'+
+    '<details><summary>Journals with highest errors-per-article rate</summary>'+
+      '<div class="details-body"><p class="footnote">Limited to journals with ≥3 articles in this dataset.</p><table class="data"><thead><tr><th class="mono">Journal</th><th class="num">Errors/article</th><th class="num">Total errors</th><th class="num">Articles</th></tr></thead><tbody>'+journalRows()+'</tbody></table></div>'+
     '</details>'+
     '<details><summary>Messiest articles — most distinct error types at once</summary>'+
       '<div class="details-body"><table class="data"><thead><tr><th class="mono">Article</th><th class="mono">Journal</th><th class="num">Distinct errors</th><th class="num">Runs</th></tr></thead><tbody>'+messyRows()+'</tbody></table></div>'+
     '</details>'+
-    '<details><summary>Journals with highest errors-per-article rate</summary>'+
-      '<div class="details-body"><p class="footnote">Limited to journals with ≥3 articles in this dataset.</p><table class="data"><thead><tr><th class="mono">Journal</th><th class="num">Errors/article</th><th class="num">Total errors</th><th class="num">Articles</th></tr></thead><tbody>'+journalRows()+'</tbody></table></div>'+
+    '<details><summary>Every raw error pattern ('+summary.categories.length+')</summary>'+
+      '<div class="details-body"><table class="data"><thead><tr><th>Message pattern</th><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th></tr></thead><tbody>'+catRows()+'</tbody></table></div>'+
     '</details>';
 }
 
 function renderAll(summary){
   document.getElementById('emptyState').hidden=true;
   document.getElementById('main').hidden=false;
-  document.getElementById('mastheadMeta').innerHTML=
-    '<span><b>'+fmtInt(summary.totals.totalRuns)+'</b> validation runs</span>'+
-    '<span><b>'+fmtInt(summary.totals.totalInstances)+'</b> error instances</span>'+
-    '<span><b>'+fmtInt(summary.totals.uniqueArticles)+'</b> articles</span>'+
-    '<span><b>'+fmtInt(summary.totals.uniqueJournals)+'</b> journals</span>'+
-    '<span>'+esc(summary.totals.dateStart||'?')+' → '+esc(summary.totals.dateEnd||'?')+'</span>'+
-    '<span style="color:var(--muted);">source: '+esc(summary.meta.filename)+'</span>';
   renderNorthStar(summary);
   renderPriority(summary);
-  renderTrend(summary);
   renderDeepDive(summary);
 }
 
@@ -565,6 +632,7 @@ function renderAll(summary){
       const summary=await loadRun(latest.id);
       if(summary){
         currentSummary=summary;
+        currentRunId=latest.id;
         populateRunSelect(latest.id);
         renderAll(summary);
       }

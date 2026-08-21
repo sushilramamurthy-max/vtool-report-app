@@ -40,8 +40,11 @@ app.get('/api/runs', (req, res) => {
       uniqueJournals: r.totals.uniqueJournals,
       dateStart: r.totals.dateStart,
       dateEnd: r.totals.dateEnd,
-      topCategories: r.buckets.slice(0, 5).map(b => ({
-        category: b.category, count: b.count, shareOfTotal: b.shareOfTotal
+      // Full category breakdown (not just top 5) so per-category trend works for every row, not only the biggest.
+      // There are only ~10 fixed categories, so this stays tiny even with many runs stored.
+      categoryBreakdown: r.buckets.map(b => ({
+        category: b.category, count: b.count, shareOfTotal: b.shareOfTotal,
+        articleCount: b.articleCount, journalCount: b.journalCount
       }))
     }))
     .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
