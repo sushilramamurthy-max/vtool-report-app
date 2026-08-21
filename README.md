@@ -1,19 +1,26 @@
 # Path to Zero
 
-A single-page error-elimination tracker, built around one number: **the % of errors that are our fault** (product or parser defects) vs. errors that are user/content-driven and don't count against the goal.
+A single-page error-elimination tracker, built around one number: **how many errors can only be caused by how the document was built** — not by anything a reader or author did — vs. content-related errors that are tracked separately.
 
 Upload a CSV (`error`, `jid`, `aid`, `start_time` columns) and it shows:
 
-1. **North Star** — the product-preventable error rate, front and center. Target: 0%.
-2. **This week's must-fix list** — every category tagged Product or Parser, ranked by impact, with a plain-English recommendation. This is the only list that counts toward the goal.
-3. **Trend** — is that rate actually moving, across every upload your team has made.
-4. **Deep dive** — everything else (raw error patterns, stuck articles, worst journals) tucked into collapsed sections, not separate tabs, so the page opens clean.
+1. **North Star** — how many errors must be eliminated, front and center. Target: zero.
+2. **Fix these, in order** — every Well-formedness or Validity error, ranked by impact, with a plain-English explanation, a fix recommendation, and what actually happens (in error % and article %) if it's fixed. This is the only list that counts toward the goal.
+3. **Trend** — is that number actually moving, across every upload your team has made.
+4. **Ask anything** — a question box that answers anything about the current report on the spot (see below).
+5. **Deep dive** — everything else (every distinct error message, stuck articles, worst journals) tucked into collapsed sections, not separate tabs, so the page opens clean.
 
-## Origin tagging
+## How errors are classified
 
-Each error category gets a Product / Parser / User tag. Defaults are data-informed (namespace/DTD-style errors default to Product, DOI typos default to User, etc. — see `DEFAULT_ORIGIN_MAP` in `public/index.html`), but every tag is one click to override with a dropdown right on the priority row. Once you override a tag, it's saved server-side and applies to every future upload automatically — you're not re-classifying the same category every week.
+Every error is classified by which stage of XML processing produced it — this is factual, not a judgment call, so it needs no manual tagging:
 
-Uploads and tags are saved on the server and visible to **anyone who opens the URL** — no login required. That's the point (easy team/customer access), but it also means there's no access control out of the box. See "Adding basic protection" below if that matters for you.
+- **Well-formedness** — fails before any template or schema is even checked. Can only be caused by how the document was built.
+- **Validity (DTD/Schema)** — valid XML, but doesn't match the required structure. Also can only be caused by how the document was built.
+- **Business rule** — passes basic XML checks but breaks a content rule (formatting, completeness, a pattern). Often traces back to the source content itself.
+
+**Well-formedness and Validity always count toward the North Star. Business rule never does.** There's no per-category override — the classification follows directly from the error message itself, so there's nothing to get wrong or need to correct later. If you want a different category-to-stage mapping, edit `XML_STAGES` in `public/index.html`; it applies to every category and every future upload immediately.
+
+Uploads are saved on the server and visible to **anyone who opens the URL** — no login required. That's the point (easy team/customer access), but it also means there's no access control out of the box. See "Adding basic protection" below if that matters for you.
 
 ## Local run
 
@@ -80,15 +87,15 @@ To set it up:
 
 **Cost:** each question sends roughly 13,000 tokens of report data (varies with how much history you've uploaded) plus the answer. At current Claude Sonnet pricing that's a small fraction of a cent per question — this won't show up as a meaningful cost unless your team is asking hundreds of questions a day. You can swap the model by setting `ANTHROPIC_ASK_MODEL` (defaults to `claude-sonnet-5`) — e.g. to `claude-haiku-4-5-20251001` for lower cost per question.
 
-**What data leaves the server:** every question sends the full current report — category breakdowns, journal names, article IDs, daily trends, and your origin tags — to Anthropic's API. No raw manuscript content or full CSV rows are sent, only the aggregated summary already computed for the dashboard. Worth knowing if this deployment is ever shown to external customers.
+**What data leaves the server:** every question sends the full current report — category breakdowns, journal names, article IDs, and daily trends — to Anthropic's API. No raw manuscript content or full CSV rows are sent, only the aggregated summary already computed for the dashboard. Worth knowing if this deployment is ever shown to external customers.
 
 ## How data is stored
 
-Each upload is aggregated in the browser (nothing raw leaves the client except the computed summary — category counts, daily trends, top journals/articles). That summary — typically 50–150KB even for 50,000+ row CSVs — is POSTed to `/api/runs` and saved to `data.json` on the server. The last 30 uploads are kept; older ones are dropped automatically. Origin tags (category → Product/Parser/User) are saved separately and persist independent of any single run.
+Each upload is aggregated in the browser (nothing raw leaves the client except the computed summary — category counts, daily trends, top journals/articles). That summary — typically 50–150KB even for 50,000+ row CSVs — is POSTed to `/api/runs` and saved to `data.json` on the server. The last 30 uploads are kept; older ones are dropped automatically.
 
 ## Files
 
-- `server.js` — Express backend (list runs, get one run, save a run, get/set origin tags)
+- `server.js` — Express backend (list runs, get one run, save a run, ask-anything)
 - `public/index.html` — the dashboard (single file: HTML/CSS/JS, Chart.js + PapaParse from CDN)
 - `render.yaml` — free-tier Render Blueprint config
 - `render-with-disk.yaml` — paid-tier variant with a persistent disk (rename to `render.yaml` once upgraded)

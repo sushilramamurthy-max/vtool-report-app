@@ -70,6 +70,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .ask-answer{margin-top:0;padding:16px 18px;background:var(--paper-raised);border:1px solid var(--rule-strong);border-top:none;font-size:13.5px;line-height:1.6;white-space:pre-wrap;}
 .ask-answer.loading{color:var(--muted);font-style:italic;}
 .ask-answer.error{color:var(--rust);background:var(--rust-soft);border-color:var(--rust);}
+.ask-answer.soon{color:var(--muted);background:var(--paper-raised);border-color:var(--rule-strong);font-style:italic;}
 .ask-answer .mono{font-family:var(--font-mono);background:var(--paper);padding:1px 5px;}
 
 .callout{background:var(--rust-soft);border-left:3px solid var(--rust);padding:14px 16px;margin-bottom:20px;font-size:13.5px;}
@@ -86,16 +87,6 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .priority-row h3{font-family:var(--font-display);font-size:17px;margin:0 0 3px;}
 .stage-badge{display:inline-block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;border:1px solid;padding:1px 6px;border-radius:2px;vertical-align:middle;margin-left:6px;}
 .priority-row .metrics{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-
-.origin-toggle{display:inline-flex;border:1px solid var(--rule-strong);}
-.origin-toggle.small{transform:scale(.88);transform-origin:right center;}
-.origin-btn{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;background:var(--paper);color:var(--muted);border:none;border-right:1px solid var(--rule-strong);padding:6px 10px;cursor:pointer;}
-.origin-btn:last-child{border-right:none;}
-.origin-btn:hover{background:var(--paper-raised);color:var(--ink);}
-.origin-btn.active.product{background:var(--rust);color:var(--paper-raised);}
-.origin-btn.active.parser{background:var(--slate);color:var(--paper-raised);}
-.origin-btn.active.user{background:var(--sage);color:var(--paper-raised);}
-.auto-flag{font-family:var(--font-mono);font-size:10px;color:var(--amber);margin-top:4px;text-align:right;}
 
 .priority-detail{padding:0 16px 16px;border-top:1px solid var(--rule);margin-top:2px;}
 .detail-block{padding-top:14px;}
@@ -129,7 +120,6 @@ table.data tr:hover td{background:var(--paper);}
 table.data td.mono,table.data th.mono{font-family:var(--font-mono);}
 table.data td.num{text-align:right;font-family:var(--font-mono);}
 table.data th.num{text-align:right;}
-table.data td .origin-toggle{float:right;}
 
 .chart-wrap{border:1px solid var(--rule);padding:16px;margin-bottom:20px;background:var(--paper-raised);}
 .chart-wrap canvas{max-height:240px;}
@@ -144,7 +134,7 @@ table.data td .origin-toggle{float:right;}
 <div id="app">
   <header class="masthead">
     <div class="masthead-top">
-      <div class="kicker">Product · Continuous Improvement</div>
+      <div class="kicker">Content Validation Report</div>
       <div>
         <button class="btn" id="uploadBtn">+ Upload CSV run</button>
         <input type="file" id="fileInput" accept=".csv" hidden />
@@ -219,12 +209,12 @@ const XML_STAGES = {
 };
 const STAGE_META = {
   wellformedness: { label:'Well-formedness', short:'Well-formed', color:'var(--rust)',
-    def:'Checked before any grammar is consulted — a namespace or syntax constraint from the XML/Namespaces spec itself. If this fails, the document is broken at the most basic level, independent of any DTD or schema.' },
+    def:'The most basic check there is — is this even valid XML at all? This is checked first, before anything is compared against a template. If it fails here, nothing else about the document matters yet.' },
   validity: { label:'Validity (DTD/Schema)', short:'Validity', color:'var(--amber)',
-    def:'The document is well-formed XML, but doesn\'t conform to the DTD or schema\'s grammar — a missing attribute declaration, a content-model mismatch, or an ID/IDREF/entity constraint.' },
+    def:'The document is technically valid XML, but doesn\'t match the structure the DTD/schema requires — a missing declaration, a mismatched section, or a broken cross-reference.' },
   businessrule: { label:'Business rule', short:'Business rule', color:'var(--slate)',
-    def:'Not expressible in a DTD or XSD alone — a co-occurrence, formatting, or pattern check layered on top, typically via Schematron-style rules.' },
-  unclassified: { label:'Unclassified', short:'Unclassified', color:'var(--muted)', def:'Doesn\'t cleanly fit the categories above.' }
+    def:'Passes basic XML checks, but breaks a content rule layered on top — formatting, completeness, or a pattern check. These often trace back to the source content itself.' },
+  unclassified: { label:'Unclassified', short:'Unclassified', color:'var(--muted)', def:'Doesn\'t cleanly fit the categories above — worth a manual look.' }
 };
 function aggregate(rows){
   const categories={},buckets={},daily={},journals={},articles={};
@@ -330,36 +320,14 @@ function buildSummary(agg,meta){
   };
 }
 
-// Data-informed defaults, one per category. These are a STARTING POINT based on what
-// each error type typically implies (a namespace/DTD issue is systemic; a DOI typo is
-// author input) — not a verdict. Every category is one click to override in the UI,
-// and once you do, it's remembered for every future upload.
-const DEFAULT_ORIGIN_MAP = {
-  'Namespace binding': 'product',                  // near-universal breadth, shared template/DTD cause
-  'Namespace attribute declaration': 'product',    // missing shared DTD declarations
-  'Unparsed entity': 'product',                    // missing NDATA entity-generation step in the pipeline, not a parser bug
-  'Table structure': 'product',                   // concentrated in a few journals — likely a template defect there
-  'Identifier / ID conflict': 'product',           // ID generation is a tooling concern
-  'Element structure / schema mismatch': 'product', // ambiguous — defaults to counting against us until reviewed
-  'Whitespace formatting': 'user',                 // sporadic authoring formatting slips
-  'Bibliography / references': 'user',             // citation completeness is author-driven
-  'Author / affiliation metadata': 'user',         // author-entered names/affiliations
-  'DOI formatting': 'user',                        // author-supplied DOI typos
-  'Other': 'user'                                  // low-volume catch-all; promote individually once reviewed
-};
-function defaultOrigin(bucket){
-  if (DEFAULT_ORIGIN_MAP[bucket.category]) return DEFAULT_ORIGIN_MAP[bucket.category];
-  // fallback for any category not in the map above (e.g. future error text patterns):
-  // near-universal breadth reads as systemic, narrow breadth reads as sporadic user content.
-  return bucket.journalBreadth >= 0.5 ? 'product' : 'user';
-}
-const ORIGIN_META = {
-  product: { label:'Product defect', dot:'var(--rust)', mustBeZero:true },
-  parser:  { label:'Parser defect',  dot:'var(--slate)', mustBeZero:true },
-  user:    { label:'User content',   dot:'var(--sage)', mustBeZero:false }
-};
+// Which stages count toward "must eliminate" vs which are tracked separately.
+// This is deterministic — it follows from what stage of XML processing produced the
+// error, not a judgment call about who's at fault. Well-formedness and Validity errors
+// can only be caused by the system that builds the XML; a reader or author's content
+// can't trigger them. Business-rule errors are the ones that can trace back to content.
+const STAGE_COUNTS_AGAINST_GOAL = { wellformedness:true, validity:true, businessrule:false, unclassified:false };
 
-let currentSummary=null, currentRunId=null, runsIndex=[], originTags={};
+let currentSummary=null, currentRunId=null, runsIndex=[];
 let trendChart=null;
 
 function fmtInt(n){return Number(n||0).toLocaleString('en-US');}
@@ -374,15 +342,6 @@ async function saveRun(summary){
   return (await res.json()).id;
 }
 async function loadRun(id){const res=await fetch('/api/runs/'+encodeURIComponent(id));return res.ok?await res.json():null;}
-async function loadOriginTags(){try{const res=await fetch('/api/origin-tags');originTags=res.ok?await res.json():{};}catch(e){originTags={};}}
-async function setOriginTag(category,origin){
-  originTags[category]=origin;
-  try{
-    await fetch('/api/origin-tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category,origin})});
-  }catch(e){ showToast('Could not save that tag — check your connection.'); }
-}
-function effectiveOrigin(bucket){ return originTags[bucket.category] || defaultOrigin(bucket); }
-function isAutoTagged(bucket){ return !originTags[bucket.category]; }
 
 document.getElementById('uploadBtn').addEventListener('click',function(){document.getElementById('fileInput').click();});
 document.getElementById('fileInput').addEventListener('change', async function(e){
@@ -431,67 +390,72 @@ document.getElementById('runSelect').addEventListener('change', async function(e
 });
 
 function computeNorthStar(summary){
-  const breakdown = { product: {count:0, categories:[]}, parser: {count:0, categories:[]}, user: {count:0, categories:[]} };
+  const breakdown = { wellformedness:{count:0,categories:[]}, validity:{count:0,categories:[]}, businessrule:{count:0,categories:[]}, unclassified:{count:0,categories:[]} };
   summary.buckets.forEach(function(b){
-    const origin=effectiveOrigin(b);
-    breakdown[origin].count += b.count;
-    breakdown[origin].categories.push({ category:b.category, count:b.count, articleCount:b.articleCount, journalCount:b.journalCount });
+    const stage=b.stage;
+    breakdown[stage].count += b.count;
+    breakdown[stage].categories.push({ category:b.category, count:b.count, articleCount:b.articleCount, journalCount:b.journalCount });
   });
   Object.keys(breakdown).forEach(function(k){ breakdown[k].categories.sort(function(a,b){return b.count-a.count;}); });
-  const mustBeZeroCount = breakdown.product.count + breakdown.parser.count;
-  const userCount = breakdown.user.count;
-  const total=mustBeZeroCount+userCount;
-  const share = total ? mustBeZeroCount/total : 0;
-  return { mustBeZeroCount, userCount, total, share, breakdown };
+  const mustFixCount = breakdown.wellformedness.count + breakdown.validity.count;
+  const contentCount = breakdown.businessrule.count + breakdown.unclassified.count;
+  const total = mustFixCount + contentCount;
+  const share = total ? mustFixCount/total : 0;
+  return { mustFixCount, contentCount, total, share, breakdown };
 }
 
 function buildStakeholderSummary(summary){
   const ns=computeNorthStar(summary);
   const lines=[];
-  lines.push('Path to Zero — '+esc_plain(summary.meta.filename)+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
+  lines.push('Path to Zero — '+summary.meta.filename+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
   lines.push('');
-  lines.push('On us right now: '+fmtInt(ns.mustBeZeroCount)+' errors ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total). Target: zero.');
+  lines.push('Must eliminate: '+fmtInt(ns.mustFixCount)+' errors ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total). Target: zero.');
+  lines.push('These can only come from how the document is built — not from a reader or author\'s content.');
   lines.push('');
-  lines.push('PRODUCT: '+fmtInt(ns.breakdown.product.count));
-  ns.breakdown.product.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
+  lines.push('WELL-FORMEDNESS (broken before any rules are even checked): '+fmtInt(ns.breakdown.wellformedness.count));
+  ns.breakdown.wellformedness.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
   lines.push('');
-  lines.push('PARSER: '+fmtInt(ns.breakdown.parser.count));
-  ns.breakdown.parser.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
+  lines.push('VALIDITY / DTD-SCHEMA (breaks the required structure): '+fmtInt(ns.breakdown.validity.count));
+  ns.breakdown.validity.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)+' ('+fmtInt(c.articleCount)+' articles, '+fmtInt(c.journalCount)+' journals)'); });
   lines.push('');
-  lines.push('Not on us (user content, tracked separately): '+fmtInt(ns.breakdown.user.count));
+  lines.push('CONTENT-RELATED / BUSINESS RULE (tracked separately, not counted above): '+fmtInt(ns.breakdown.businessrule.count+ns.breakdown.unclassified.count));
+  ns.breakdown.businessrule.categories.forEach(function(c){ lines.push('  - '+c.category+': '+fmtInt(c.count)); });
   return lines.join('\n');
 }
-function esc_plain(s){ return String(s); }
 
 function renderNorthStar(summary){
   const ns=computeNorthStar(summary);
   const el=document.getElementById('northstarSection');
-  const goodClass = ns.mustBeZeroCount === 0 ? 'good' : '';
+  const goodClass = ns.mustFixCount === 0 ? 'good' : '';
 
-  function splitRow(key, meta){
-    const b = ns.breakdown[key];
+  function splitRow(stageKey){
+    const meta=STAGE_META[stageKey];
+    const b = ns.breakdown[stageKey];
     const names = b.categories.map(function(c){return c.category;}).join(', ');
-    return '<div class="ns-split-row"><span class="tag-dot" style="background:'+meta.dot+'"></span>'+
+    return '<div class="ns-split-row"><span class="tag-dot" style="background:'+meta.color+'"></span>'+
       '<b>'+meta.label+': '+fmtInt(b.count)+'</b>'+
       '<span class="ns-split-names">'+(names?esc(names):'none')+'</span></div>';
   }
 
+  const contentTotal=ns.breakdown.businessrule.count+ns.breakdown.unclassified.count;
+
   el.innerHTML=
     '<div class="northstar">'+
-      '<div class="ns-kicker">What\'s on us</div>'+
+      '<div class="ns-kicker">Errors we must eliminate</div>'+
       '<div class="ns-hero-row">'+
-        '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustBeZeroCount)+'</div>'+
+        '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustFixCount)+'</div>'+
         '<div class="ns-hero-side">'+
           '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' errors</div>'+
           '<div class="ns-hero-target">target — zero</div>'+
         '</div>'+
         '<canvas id="nsSparkline" class="ns-sparkline"></canvas>'+
       '</div>'+
+      '<p class="ns-why">These only happen because of how the document was built — not because of anything a reader or author did.</p>'+
       '<div class="ns-split">'+
-        splitRow('product', ORIGIN_META.product)+
-        splitRow('parser', ORIGIN_META.parser)+
+        splitRow('wellformedness')+
+        splitRow('validity')+
       '</div>'+
-      '<div class="ns-user-line">'+fmtInt(ns.breakdown.user.count)+' more errors are user-caused — tracked, not counted here.</div>'+
+      '<div class="ns-user-line">'+fmtInt(contentTotal)+' more errors are content-related (business rule) — tracked separately, not counted here.</div>'+
       '<a href="#" class="ns-copy-link" id="copySummaryBtn">Copy summary for stakeholders →</a>'+
     '</div>';
 
@@ -516,13 +480,13 @@ function buildAskContext(summary){
   const ns=computeNorthStar(summary);
   return {
     totals: summary.totals,
-    onUs: { count: ns.mustBeZeroCount, share: ns.share,
-      product: {count: ns.breakdown.product.count, categories: ns.breakdown.product.categories},
-      parser: {count: ns.breakdown.parser.count, categories: ns.breakdown.parser.categories},
-      user: {count: ns.breakdown.user.count, categories: ns.breakdown.user.categories} },
+    mustEliminate: { count: ns.mustFixCount, share: ns.share,
+      wellformedness: ns.breakdown.wellformedness,
+      validity: ns.breakdown.validity,
+      contentRelated: { count: ns.breakdown.businessrule.count+ns.breakdown.unclassified.count, categories: ns.breakdown.businessrule.categories.concat(ns.breakdown.unclassified.categories) } },
     categoriesDetailed: summary.buckets.map(function(b){
       return {category:b.category, stage:b.stage, count:b.count, shareOfTotal:b.shareOfTotal,
-        articleCount:b.articleCount, journalCount:b.journalCount, origin:effectiveOrigin(b),
+        articleCount:b.articleCount, journalCount:b.journalCount,
         wouldBecomeClean:b.wouldBecomeClean, stillAffected:b.stillAffected};
     }),
     rawMessagePatterns: summary.categories,
@@ -564,9 +528,10 @@ function renderAsk(summary){
       if(!res.ok){
         answerEl.className='ask-answer error';
         if(data.error==='not_configured'){
-          answerEl.innerHTML='Ask-anything isn\'t set up yet on this deployment. It needs an <span class="mono">ANTHROPIC_API_KEY</span> environment variable — see the README for how to add one on Render.';
+          answerEl.className='ask-answer soon';
+          answerEl.innerHTML='This feature is coming soon.';
         }else{
-          answerEl.textContent='Could not get an answer: '+(data.message||data.error||'unknown error');
+          answerEl.textContent='Could not get an answer right now — please try again in a moment.';
         }
       }else{
         answerEl.className='ask-answer';
@@ -574,7 +539,7 @@ function renderAsk(summary){
       }
     }catch(e){
       answerEl.className='ask-answer error';
-      answerEl.textContent='Could not reach the server: '+e.message;
+      answerEl.textContent='Could not reach the server — please try again in a moment.';
     }finally{
       btn.disabled=false; btn.textContent='Ask';
     }
@@ -586,25 +551,23 @@ function renderAsk(summary){
 
 function renderPriority(summary){
   const el=document.getElementById('prioritySection');
-  const mustFix=summary.buckets.filter(function(b){return ORIGIN_META[effectiveOrigin(b)].mustBeZero;}).sort(function(a,b){return b.impactScore-a.impactScore;});
-  const userCaused=summary.buckets.filter(function(b){return !ORIGIN_META[effectiveOrigin(b)].mustBeZero;});
+  const mustFix=summary.buckets.filter(function(b){return STAGE_COUNTS_AGAINST_GOAL[b.stage];}).sort(function(a,b){return b.impactScore-a.impactScore;});
+  const contentRelated=summary.buckets.filter(function(b){return !STAGE_COUNTS_AGAINST_GOAL[b.stage];});
   const prevMap=getPreviousCategoryMap();
 
   el.innerHTML=
     '<div class="section-label">Fix these, in order</div>'+
-    (mustFix.length===0?'<div class="callout sage">Nothing on us right now.</div>':'')+
+    (mustFix.length===0?'<div class="callout sage">Nothing to eliminate right now.</div>':'')+
     '<div class="priority-list" id="mustFixList"></div>'+
     '<details>'+
-      '<summary>User-caused ('+userCaused.length+' categories, '+fmtInt(userCaused.reduce(function(s,b){return s+b.count;},0))+' errors) — not on this list</summary>'+
-      '<div class="details-body" id="userCausedList"></div>'+
+      '<summary>Content-related ('+contentRelated.length+' categories, '+fmtInt(contentRelated.reduce(function(s,b){return s+b.count;},0))+' errors) — not on this list</summary>'+
+      '<div class="details-body" id="contentRelatedList"></div>'+
     '</details>';
 
   document.getElementById('mustFixList').innerHTML = mustFix.map(function(b){return priorityRowHtml(b, summary, prevMap);}).join('');
-  document.getElementById('userCausedList').innerHTML = userCaused.length
-    ? '<table class="data"><thead><tr><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th><th>Origin</th></tr></thead><tbody>'+userCaused.map(userRowHtml).join('')+'</tbody></table>'
+  document.getElementById('contentRelatedList').innerHTML = contentRelated.length
+    ? '<table class="data"><thead><tr><th>Category</th><th>Stage</th><th class="num">Errors</th><th class="num">Articles</th><th class="num">Journals</th></tr></thead><tbody>'+contentRelated.map(userRowHtml).join('')+'</tbody></table>'
     : '<p class="footnote">None.</p>';
-
-  wireOriginControls(summary);
 }
 
 // Finds the immediately-previous upload's per-category counts, so each row can show
@@ -631,21 +594,7 @@ function trendBadgeHtml(b, prevMap){
   return '<span class="trend-badge '+dir+'">'+arrow+' '+Math.abs(delta).toFixed(0)+'%</span>';
 }
 
-// Three buttons, not a dropdown — tagging a category is a decision, not a form field.
-function originToggleHtml(category, current, small){
-  const opts=['product','parser','user'];
-  const shortLabel={product:'Product',parser:'Parser',user:'User'};
-  return '<div class="origin-toggle'+(small?' small':'')+'" data-category="'+esc(category)+'">'+
-    opts.map(function(o){
-      return '<button type="button" class="origin-btn'+(o===current?' active '+o:'')+'" data-origin="'+o+'">'+shortLabel[o]+'</button>';
-    }).join('')+
-  '</div>';
-}
-
 function priorityRowHtml(b, summary, prevMap){
-  const origin=effectiveOrigin(b);
-  const auto=isAutoTagged(b);
-  const cls = origin==='parser' ? 'parser' : '';
   const stage=STAGE_META[b.stage]||STAGE_META.unclassified;
   const variants=summary.categories.filter(function(c){return c.category===b.category;}).sort(function(x,y){return y.count-x.count;});
   const samples=b.sampleArticles||[];
@@ -667,21 +616,17 @@ function priorityRowHtml(b, summary, prevMap){
     '<p><b class="mono">'+fmtPct(articlePctDrop)+'</b> of currently-failing articles go fully clean — '+fmtInt(b.wouldBecomeClean)+' of '+fmtInt(summary.totals.uniqueArticles)+' affected articles have <u>only</u> this error.</p>'+
     (b.stillAffected>0 ? '<p class="footnote">'+fmtInt(b.stillAffected)+' more articles have this error plus others — they\'d still show up on the list, just with less on them.</p>' : '');
 
-  return '<details class="priority-row '+cls+'" data-category="'+esc(b.category)+'">'+
+  return '<details class="priority-row" data-category="'+esc(b.category)+'" style="border-left-color:'+stage.color+'">'+
     '<summary>'+
       '<div class="priority-row-top">'+
         '<div>'+
           '<h3>'+esc(b.category)+' <span class="stage-badge" style="color:'+stage.color+';border-color:'+stage.color+'">'+stage.short+'</span></h3>'+
           '<div class="metrics">'+fmtInt(b.count)+' · '+fmtPct(b.shareOfTotal)+' of all errors · '+fmtInt(b.articleCount)+' articles · '+fmtInt(b.journalCount)+' journals '+trendBadgeHtml(b,prevMap)+'</div>'+
         '</div>'+
-        '<div onclick="event.stopPropagation()">'+
-          originToggleHtml(b.category, origin, false)+
-          (auto?'<div class="auto-flag">auto-tagged</div>':'')+
-        '</div>'+
       '</div>'+
     '</summary>'+
     '<div class="priority-detail">'+
-      '<div class="detail-block"><div class="detail-label">XML validation stage — '+stage.label+'</div><p>'+esc(stage.def)+'</p></div>'+
+      '<div class="detail-block"><div class="detail-label">'+stage.label+'</div><p>'+esc(stage.def)+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">What it is</div><p>'+esc(b.explanation)+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">What to fix</div><p>'+esc(b.recommendation)+'</p></div>'+
       '<div class="detail-block"><div class="detail-label">If this is fixed</div>'+ifFixedHtml+'</div>'+
@@ -691,25 +636,12 @@ function priorityRowHtml(b, summary, prevMap){
   '</details>';
 }
 function userRowHtml(b){
-  const origin=effectiveOrigin(b);
+  const stage=STAGE_META[b.stage]||STAGE_META.unclassified;
   return '<tr>'+
-    '<td>'+esc(b.category)+'</td><td class="num">'+fmtInt(b.count)+'</td><td class="num">'+fmtInt(b.articleCount)+'</td><td class="num">'+fmtInt(b.journalCount)+'</td>'+
-    '<td>'+originToggleHtml(b.category, origin, true)+'</td>'+
+    '<td>'+esc(b.category)+'</td>'+
+    '<td><span class="stage-badge" style="color:'+stage.color+';border-color:'+stage.color+'">'+stage.short+'</span></td>'+
+    '<td class="num">'+fmtInt(b.count)+'</td><td class="num">'+fmtInt(b.articleCount)+'</td><td class="num">'+fmtInt(b.journalCount)+'</td>'+
   '</tr>';
-}
-function wireOriginControls(summary){
-  document.querySelectorAll('.origin-toggle').forEach(function(group){
-    group.addEventListener('click', async function(e){
-      const btn=e.target.closest('.origin-btn');
-      if(!btn) return;
-      e.stopPropagation();
-      const category=group.dataset.category, origin=btn.dataset.origin;
-      await setOriginTag(category, origin);
-      showToast('Tagged "'+category+'" as '+ORIGIN_META[origin].label+' — remembered for future uploads.');
-      renderNorthStar(summary);
-      renderPriority(summary);
-    });
-  });
 }
 
 // Small inline trend line — lives inside the North Star card, not a separate section.
@@ -723,8 +655,8 @@ function renderNsSparkline(){
   const series=runs.map(function(r){
     let must=0;
     (r.categoryBreakdown||[]).forEach(function(c){
-      const origin=originTags[c.category]||'product';
-      if(ORIGIN_META[origin] && ORIGIN_META[origin].mustBeZero) must+=c.count;
+      const stage=XML_STAGES[c.category]||'unclassified';
+      if(STAGE_COUNTS_AGAINST_GOAL[stage]) must+=c.count;
     });
     return must;
   });
@@ -760,7 +692,7 @@ function renderDeepDive(summary){
     '<details><summary>Messiest articles — most distinct error types at once</summary>'+
       '<div class="details-body"><table class="data"><thead><tr><th class="mono">Article</th><th class="mono">Journal</th><th class="num">Distinct errors</th><th class="num">Runs</th></tr></thead><tbody>'+messyRows()+'</tbody></table></div>'+
     '</details>'+
-    '<details><summary>Every raw error pattern ('+summary.categories.length+')</summary>'+
+    '<details><summary>Every distinct error message ('+summary.categories.length+')</summary>'+
       '<div class="details-body"><table class="data"><thead><tr><th>Message pattern</th><th>Category</th><th class="num">Instances</th><th class="num">Articles</th><th class="num">Journals</th></tr></thead><tbody>'+catRows()+'</tbody></table></div>'+
     '</details>';
 }
@@ -776,7 +708,6 @@ function renderAll(summary){
 
 (async function boot(){
   try{
-    await loadOriginTags();
     await loadIndex();
     if(runsIndex.length){
       const latest=runsIndex[0];
