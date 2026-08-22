@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Zero Errors, Every Article — Proof Central Output XML Validation Report</title>
+<title>Every Article, Publish-Ready — Proof Central Output XML Validation Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
@@ -48,10 +48,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-body);-webk
 .ns-hero-side{font-family:var(--font-mono);font-size:13px;color:var(--muted);line-height:1.6;}
 .ns-hero-target{color:var(--ink);}
 .ns-sparkline{width:140px;height:44px;margin-left:auto;}
-.ns-split{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule);display:flex;gap:34px;flex-wrap:wrap;}
-.ns-split-row{font-size:14px;}
+.ns-split{margin-top:20px;padding-top:16px;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:8px;}
+.ns-split-row{font-size:14px;margin-bottom:6px;}
 .ns-split-row b{font-family:var(--font-mono);font-weight:600;}
-.ns-split-names{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;max-width:280px;}
+.ns-split-names{font-size:12.5px;color:var(--muted);}
 .ns-user-line{margin-top:12px;font-size:12px;color:var(--muted);}
 .ns-copy-link{display:inline-block;margin-top:16px;font-family:var(--font-mono);font-size:11.5px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule-strong);}
 .ns-copy-link:hover{color:var(--ink);border-bottom-color:var(--ink);}
@@ -140,7 +140,7 @@ table.data th.num{text-align:right;}
         <input type="file" id="fileInput" accept=".csv" hidden />
       </div>
     </div>
-    <h1 class="title">Zero Errors, Every Article</h1>
+    <h1 class="title">Every Article, Publish-Ready</h1>
     <div class="run-select-row" id="runSelectRow" style="display:none;">
       <label style="color:var(--muted);">Viewing —</label>
       <select id="runSelect"></select>
@@ -213,13 +213,14 @@ const XML_STAGES = {
   'Other': 'unclassified'
 };
 const STAGE_META = {
-  wellformedness: { label:'Well-formedness', short:'Well-formed', color:'var(--rust)',
+  wellformedness: { label:'Well-formedness', short:'Well-formed', color:'var(--rust)', gloss:'breaks the basic rules of XML itself',
     def:'The most basic check there is — is this even valid XML at all? This is checked first, before anything is compared against a template. If it fails here, nothing else about the document matters yet.' },
-  validity: { label:'Validity (DTD/Schema)', short:'Validity', color:'var(--amber)',
+  validity: { label:'Validity (DTD/Schema)', short:'Validity', color:'var(--amber)', gloss:"doesn't match the structure this article is required to have",
     def:'The document is technically valid XML, but doesn\'t match the structure the DTD/schema requires — a missing declaration, a mismatched section, or a broken cross-reference.' },
-  businessrule: { label:'Business rule', short:'Business rule', color:'var(--slate)',
+  businessrule: { label:'Business rule', short:'Business rule', color:'var(--slate)', gloss:'a content issue — formatting, completeness, or a pattern check',
     def:'Passes basic XML checks, but breaks a content rule layered on top — formatting, completeness, or a pattern check. These often trace back to the source content itself.' },
-  unclassified: { label:'Unclassified', short:'Unclassified', color:'var(--muted)', def:'Doesn\'t cleanly fit the categories above — worth a manual look.' }
+  unclassified: { label:'Unclassified', short:'Unclassified', color:'var(--muted)', gloss:"doesn't fit a known pattern yet",
+    def:'Doesn\'t cleanly fit the categories above — worth a manual look.' }
 };
 function aggregate(rows){
   const categories={},buckets={},daily={},journals={},articles={};
@@ -414,7 +415,7 @@ function buildStakeholderSummary(summary){
   const lines=[];
   lines.push('Proof Central — Output XML Validation Report — '+summary.meta.filename+' ('+summary.totals.dateStart+' to '+summary.totals.dateEnd+')');
   lines.push('');
-  lines.push('Must eliminate: '+fmtInt(ns.mustFixCount)+' errors ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total). Target: zero.');
+  lines.push('Errors we must fix: '+fmtInt(ns.mustFixCount)+' ('+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total errors). Target: zero — every article publish-ready.');
   lines.push('These can only come from how the document is built — not from a reader or author\'s content.');
   lines.push('');
   lines.push('WELL-FORMEDNESS (broken before any rules are even checked): '+fmtInt(ns.breakdown.wellformedness.count));
@@ -436,31 +437,30 @@ function renderNorthStar(summary){
   function splitRow(stageKey){
     const meta=STAGE_META[stageKey];
     const b = ns.breakdown[stageKey];
-    const names = b.categories.map(function(c){return c.category;}).join(', ');
     return '<div class="ns-split-row"><span class="tag-dot" style="background:'+meta.color+'"></span>'+
       '<b>'+meta.label+': '+fmtInt(b.count)+'</b>'+
-      '<span class="ns-split-names">'+(names?esc(names):'none')+'</span></div>';
+      '<span class="ns-split-names">— '+esc(meta.gloss)+'</span></div>';
   }
 
   const contentTotal=ns.breakdown.businessrule.count+ns.breakdown.unclassified.count;
 
   el.innerHTML=
     '<div class="northstar">'+
-      '<div class="ns-kicker">Errors we must eliminate</div>'+
+      '<div class="ns-kicker">Errors we must fix</div>'+
       '<div class="ns-hero-row">'+
         '<div class="ns-hero-num '+goodClass+'">'+fmtInt(ns.mustFixCount)+'</div>'+
         '<div class="ns-hero-side">'+
-          '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' errors</div>'+
-          '<div class="ns-hero-target">so every article passes clean</div>'+
+          '<div>'+fmtPct(ns.share)+' of '+fmtInt(summary.totals.totalInstances)+' total errors</div>'+
+          '<div class="ns-hero-target">must be fixed before an article can publish</div>'+
         '</div>'+
         '<canvas id="nsSparkline" class="ns-sparkline"></canvas>'+
       '</div>'+
-      '<p class="ns-why">A fix here doesn\'t just clear one article — it clears every future one that would\'ve hit the same error.</p>'+
+      '<p class="ns-why">These are the only errors that stop an article\'s XML from being valid. Fix the cause once, and every article that would\'ve hit it — past or future — is clear.</p>'+
       '<div class="ns-split">'+
         splitRow('wellformedness')+
         splitRow('validity')+
       '</div>'+
-      '<div class="ns-user-line">'+fmtInt(contentTotal)+' more errors are content-related (business rule) — tracked separately, not counted here.</div>'+
+      '<div class="ns-user-line">'+fmtInt(contentTotal)+' more errors come from the article\'s own content (formatting, references, etc.) — tracked separately, and not counted above.</div>'+
       '<a href="#" class="ns-copy-link" id="copySummaryBtn">Copy summary for stakeholders →</a>'+
     '</div>';
 
