@@ -162,14 +162,19 @@ table.data th.num{text-align:right;}
 <div id="toast" class="toast" hidden></div>
 
 <script>
+// Groups messages for the "distinct error" / "message variants" views. Only strips
+// what's genuinely volatile per-instance (file paths, line/column numbers, row lists) —
+// keeps quoted element/attribute/entity names intact, since those are exactly what an
+// engineer needs to see to know what's actually broken and plan a fix.
 function normalizeTemplate(msg){
   let m=String(msg);
   m=m.replace(/systemId: file:[^\s;]+/g,'systemId: file:<FILE>');
   m=m.replace(/lineNumber: \d+/g,'lineNumber: <N>');
   m=m.replace(/columnNumber: \d+/g,'columnNumber: <N>');
-  m=m.replace(/"[^"]*"/g,'"<X>"');
   m=m.replace(/row [\d, ]+/g,'row <LIST> ');
-  m=m.replace(/\d+/g,'<N>');
+  // Collapse remaining digits, but never inside quoted text — that's where the
+  // meaningful names (element types, attributes, entity IDs) live.
+  m=m.replace(/"[^"]*"|\d+/g, function(match){ return match.charAt(0)==='"' ? match : '<N>'; });
   return m.trim();
 }
 // Categorized the way an XML processor actually evaluates a document, in order:
@@ -182,9 +187,9 @@ function categorize(template){
   if(t.includes('xmlns')&&t.includes('must be declared'))return 'Namespace attribute declaration';
   if(t.includes('entity')&&t.includes('unparsed'))return 'Unparsed entity';
   if(t.includes('begins or ends with a space')||t.includes('whitespace'))return 'Whitespace formatting';
-  if(t.includes('bibliograph')||t.includes('overlap'))return 'Bibliography / references';
-  if(t.includes('not all entries')||t.includes('row'))return 'Table structure';
-  if(t.includes('doi'))return 'DOI formatting';
+  if(t.includes('bibliograph'))return 'Bibliography / references';
+  if(t.includes('not all entries')||(t.includes('entries')&&t.includes('overlap'))||t.includes('row'))return 'Table structure';
+  if(t.includes('doi')&&!t.includes('content of element type'))return 'DOI formatting';
   if(t.includes('id must be unique')||t.includes('identifier'))return 'Identifier / ID conflict';
   if(t.includes('author')||t.includes('affiliation')||t.includes('given-name')||t.includes('surname'))return 'Author / affiliation metadata';
   if(t.includes('content of element type')||t.includes('must match'))return 'Element structure / schema mismatch';
@@ -599,9 +604,13 @@ function priorityRowHtml(b, summary, prevMap){
   const variants=summary.categories.filter(function(c){return c.category===b.category;}).sort(function(x,y){return y.count-x.count;});
   const samples=b.sampleArticles||[];
 
-  const variantsHtml = variants.map(function(v){
+  const VARIANT_CAP=15;
+  const shownVariants=variants.slice(0,VARIANT_CAP);
+  const hiddenCount=variants.length-shownVariants.length;
+  const hiddenSum=variants.slice(VARIANT_CAP).reduce(function(s,v){return s+v.count;},0);
+  const variantsHtml = shownVariants.map(function(v){
     return '<div class="variant-row"><span class="mono">'+esc(v.template)+'</span><span class="variant-count">'+fmtInt(v.count)+'</span></div>';
-  }).join('');
+  }).join('') + (hiddenCount>0 ? '<div class="footnote" style="margin-top:6px;">+ '+fmtInt(hiddenCount)+' more distinct messages ('+fmtInt(hiddenSum)+' instances) — this category covers a wide range of specific content, not one repeated message.</div>' : '');
 
   const samplesHtml = samples.length
     ? samples.map(function(s){return '<span class="sample-pill">'+esc(s.jid)+' / '+esc(s.aid)+'</span>';}).join(' ')
